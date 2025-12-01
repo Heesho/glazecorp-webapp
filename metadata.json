@@ -1,0 +1,5 @@
+{
+  "name": "GlazeCorp - Donut Rig",
+  "description": "A high-fidelity interface for the Donut Miner protocol on Base. Compete for the King of the Hill slot in a Dutch Auction mechanic.",
+  "requestFramePermissions": []
+}
