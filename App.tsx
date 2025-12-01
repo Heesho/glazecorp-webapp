@@ -1,21 +1,25 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
-import { 
+import {
   Terminal, ShieldAlert, Zap,
   LayoutGrid, BarChart3, Users,
-  Activity, Radio, DollarSign, Wallet
+  Activity, Radio, DollarSign
 } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { useAccount, useWalletClient } from 'wagmi';
 import { Card } from './components/Card';
 import { Button } from './components/Button';
 import { TV } from './components/TV';
 import { DonutLogo } from './components/DonutLogo';
-import { 
-  fetchMinerState, 
+import {
+  fetchMinerState,
+  fetchMinerStartTime,
   fetchFarcasterProfile,
-  fetchFarcasterProfiles, 
+  fetchFarcasterProfiles,
   fetchGraphData,
   fetchEthPrice,
   calculateDutchAuctionPrice,
+  calculateNextHalving,
   formatEth,
   formatDonut,
   truncateAddress,
@@ -44,6 +48,10 @@ const INITIAL_STATE: MinerState = {
 type TabView = 'TERMINAL' | 'AUCTIONS';
 
 const App: React.FC = () => {
+  // -- Wallet State (RainbowKit/wagmi) --
+  const { address: userAddress, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
   // -- Data State --
   const [minerState, setMinerState] = useState<MinerState>(INITIAL_STATE);
   const [kingProfile, setKingProfile] = useState<FarcasterProfile | null>(null);
@@ -52,35 +60,26 @@ const App: React.FC = () => {
   const [stats, setStats] = useState({ revenue: '0', minted: '0' });
   const [userGraphStats, setUserGraphStats] = useState<GraphStat | null>(null);
   const [ethPrice, setEthPrice] = useState<number>(0);
-  
+
   // -- UI State --
   const [activeTab, setActiveTab] = useState<TabView>('TERMINAL');
   const [currentPrice, setCurrentPrice] = useState<bigint>(0n);
-  const [userAddress, setUserAddress] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [isGlazing, setIsGlazing] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [halvingDisplay, setHalvingDisplay] = useState("--d --h --m --s");
-
-  // -- Refs --
-  
-  // Initialize halving target (mocking ~142 days from load for visual)
-  const halvingTargetRef = useRef(Date.now() + (142 * 24 * 60 * 60 * 1000) + (11 * 60 * 60 * 1000) + (59 * 60 * 1000) + 49000);
+  const [nextHalvingTime, setNextHalvingTime] = useState<number | null>(null);
 
   // 1. Polling Cycle (Data)
   useEffect(() => {
     const refresh = async () => {
-      const addr = userAddress || ethers.ZeroAddress;
-      
+      const addr = userAddress ?? ethers.ZeroAddress;
+
       // A. Contract State
       const state = await fetchMinerState(addr);
       if (state) {
         setMinerState(state);
-        if (state.miner !== minerState.miner) {
-          const profile = await fetchFarcasterProfile(state.miner);
-          setKingProfile(profile);
-        }
       }
 
       // B. Graph Data
@@ -89,8 +88,8 @@ const App: React.FC = () => {
         if (graphData.miners?.[0]) {
           setStats(graphData.miners[0]);
         }
-        if (graphData.miner) {
-          setUserGraphStats(graphData.miner);
+        if (graphData.account) {
+          setUserGraphStats(graphData.account);
         }
         if (graphData.glazes) {
           const formattedFeed = graphData.glazes.map((g: any) => ({
@@ -98,7 +97,7 @@ const App: React.FC = () => {
             miner: g.account?.id || ethers.ZeroAddress,
             uri: g.uri,
             timestamp: Number(g.startTime),
-            price: g.initPrice
+            price: g.spent
           }));
           setFeed(formattedFeed);
         }
@@ -112,9 +111,32 @@ const App: React.FC = () => {
     refresh();
     const interval = setInterval(refresh, 5000);
     return () => clearInterval(interval);
-  }, [userAddress, minerState.miner]); 
+  }, [userAddress]);
 
-  // 2. Fetch Profiles for Feed
+  // 2. Fetch King Profile when miner changes
+  useEffect(() => {
+    const loadKingProfile = async () => {
+      if (minerState.miner && minerState.miner !== ethers.ZeroAddress) {
+        const profile = await fetchFarcasterProfile(minerState.miner);
+        setKingProfile(profile);
+      }
+    };
+    loadKingProfile();
+  }, [minerState.miner]);
+
+  // 3. Fetch Miner Start Time for halving calculation (once on mount)
+  useEffect(() => {
+    const loadHalvingData = async () => {
+      const startTime = await fetchMinerStartTime();
+      if (startTime) {
+        const nextHalving = calculateNextHalving(startTime);
+        setNextHalvingTime(nextHalving);
+      }
+    };
+    loadHalvingData();
+  }, []);
+
+  // 4. Fetch Profiles for Feed
   useEffect(() => {
     const loadProfiles = async () => {
        const addressesToFetch = feed
@@ -129,7 +151,7 @@ const App: React.FC = () => {
     if (feed.length > 0) loadProfiles();
   }, [feed]);
 
-  // 4. Fast Cycle (Ticker & Countdown)
+  // 5. Fast Cycle (Ticker & Countdown)
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(Date.now());
@@ -139,42 +161,29 @@ const App: React.FC = () => {
       setCurrentPrice(price);
 
       // Update Halving Countdown
-      const diff = halvingTargetRef.current - Date.now();
-      if (diff > 0) {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        setHalvingDisplay(`${days}d ${hours}h ${minutes}m ${seconds}s`);
-      } else {
-        setHalvingDisplay("IMMINENT");
+      if (nextHalvingTime) {
+        const diff = (nextHalvingTime * 1000) - Date.now(); // Convert to ms
+        if (diff > 0) {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          setHalvingDisplay(`${days}d ${hours}h ${minutes}m ${seconds}s`);
+        } else {
+          setHalvingDisplay("HALVING NOW");
+        }
       }
     }, 100);
     return () => clearInterval(timer);
-  }, [minerState.initPrice, minerState.startTime]);
+  }, [minerState.initPrice, minerState.startTime, nextHalvingTime]);
 
   // -- Handlers --
-  const connectWallet = async () => {
-    setConnectionError(null);
-    if (window.ethereum) {
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        setUserAddress(await signer.getAddress());
-      } catch (e: any) {
-        console.error("Connection failed", e);
-        setConnectionError("Wallet connection failed or rejected.");
-      }
-    } else {
-      setConnectionError("No wallet detected. Please install a Web3 wallet.");
-    }
-  };
-
   const handleGlaze = async () => {
-    if (!userAddress || !window.ethereum) return;
+    if (!userAddress || !walletClient) return;
     setIsGlazing(true);
+    setConnectionError(null);
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new ethers.BrowserProvider(walletClient.transport);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(MULTICALL_ADDRESS, MULTICALL_ABI, signer);
 
@@ -182,17 +191,17 @@ const App: React.FC = () => {
       const deadline = Math.floor(Date.now()/1000) + 300;
       const priceVal = BigInt(currentPrice);
       const valueToSend = priceVal + (priceVal / 10n);
-      const shopAddress = "0x0000000000000000000000000000000000000000"; 
+      const shopAddress = "0x0000000000000000000000000000000000000000";
 
       const tx = await contract.mine(
         shopAddress,
         epochId,
         deadline,
         valueToSend,
-        message || "Glazed.",
+        message.trim() || "We Glaze The World",
         { value: valueToSend }
       );
-      
+
       await tx.wait();
       setMessage("");
       const state = await fetchMinerState(userAddress);
@@ -209,25 +218,40 @@ const App: React.FC = () => {
   // -- Safe Derived Metrics --
   const safeDps = minerState?.dps ? BigInt(minerState.dps) : 0n;
   const safeDonutPrice = minerState?.donutPrice ? BigInt(minerState.donutPrice) : 0n;
-  
+  const safeInitPrice = minerState?.initPrice ? BigInt(minerState.initPrice) : 0n;
+  const safeCurrentPrice = currentPrice;
+
   const elapsedSeconds = BigInt(Math.max(0, Math.floor(now / 1000) - Number(minerState.startTime)));
+
+  // Format glaze time
+  const formatGlazeTime = (seconds: number): string => {
+    if (seconds < 0) return "0s";
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+    if (minutes > 0) return `${minutes}m ${secs}s`;
+    return `${secs}s`;
+  };
+  const glazeTimeStr = formatGlazeTime(Number(elapsedSeconds));
   const accruedDonutsWei = elapsedSeconds * safeDps;
   const accruedDonutsStr = formatDonut(accruedDonutsWei);
-  
+
   const accruedValueWei = (accruedDonutsWei * safeDonutPrice) / 1000000000000000000n;
   const accruedValueEthNum = parseFloat(ethers.formatEther(accruedValueWei));
   const accruedValueUsdStr = (accruedValueEthNum * ethPrice).toFixed(2);
 
-  const costWei = minerState?.price ? BigInt(minerState.price) : 0n;
-  const costEthNum = parseFloat(ethers.formatEther(costWei));
-  
-  const pnlEthNum = accruedValueEthNum - costEthNum;
-  const pnlSign = pnlEthNum < 0 ? "-" : "+";
-  const pnlEthStr = `${pnlSign}Ξ${Math.abs(pnlEthNum).toFixed(5)}`;
-  
+  // PNL Calculation: (currentPrice * 0.8) - (initPrice / 2)
+  const halfInitPrice = safeInitPrice / 2n;
+  const pnlWei = (safeCurrentPrice * 80n) / 100n - halfInitPrice;
+  const pnlIsPositive = pnlWei >= 0n;
+  const pnlAbsWei = pnlIsPositive ? pnlWei : -pnlWei;
+  const pnlEthNum = parseFloat(ethers.formatEther(pnlAbsWei));
+  const pnlSign = pnlIsPositive ? "+" : "-";
+  const pnlEthStr = `${pnlSign}Ξ${pnlEthNum.toFixed(5)}`;
+
   const pnlUsdNum = pnlEthNum * ethPrice;
-  const pnlUsdSign = pnlUsdNum < 0 ? "-" : "+";
-  const pnlUsdStr = `${pnlUsdSign}$${Math.abs(pnlUsdNum).toFixed(2)}`;
+  const pnlUsdStr = `${pnlSign}$${pnlUsdNum.toFixed(2)}`;
 
   const dpsEthWei = (safeDps * safeDonutPrice) / 1000000000000000000n;
   const dpsUsd = parseFloat(ethers.formatEther(dpsEthWei)) * ethPrice;
@@ -282,29 +306,18 @@ const App: React.FC = () => {
            </div>
 
            {/* Wallet */}
-           {!userAddress ? (
-             <Button variant="primary" onClick={connectWallet} className="!py-2 !px-5 !text-xs">
-               Connect Wallet
-             </Button>
-           ) : (
-             <div className="flex items-center gap-3 bg-zinc-900/50 border border-brand-pink/20 rounded-full pl-4 pr-1 py-1">
-               <span className="text-[10px] font-bold text-zinc-400 font-mono tracking-wider">{truncateAddress(userAddress)}</span>
-               <div className="h-6 w-6 rounded-full bg-brand-pink/20 flex items-center justify-center border border-brand-pink/40">
-                  <Wallet size={12} className="text-brand-pink" />
-               </div>
-             </div>
-           )}
+           <ConnectButton />
         </div>
       </header>
 
       {/* MAIN LAYOUT */}
-      <main className="flex-1 p-4 lg:p-6 min-h-0 overflow-hidden relative z-10">
-        
+      <main className="flex-1 p-4 lg:p-6 min-h-0 overflow-y-auto lg:overflow-hidden relative z-10">
+
         {activeTab === 'TERMINAL' ? (
-          <div className="grid grid-cols-12 gap-6 h-full min-h-0">
-            
+          <div className="grid grid-cols-12 gap-4 lg:gap-6 lg:h-full min-h-0 pb-6 lg:pb-0">
+
             {/* --- COLUMN 1: INTEL --- */}
-            <div className="col-span-12 lg:col-span-3 flex flex-col gap-6 min-h-0 h-full">
+            <div className="col-span-12 lg:col-span-3 flex flex-col gap-4 lg:gap-6 min-h-0 lg:h-full">
               
               {/* CURRENT OPERATOR */}
               <Card 
@@ -344,7 +357,11 @@ const App: React.FC = () => {
                   </div>
 
                   {/* Stats Rows */}
-                  <div className="space-y-3">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center px-3 py-2 bg-black/20 rounded border border-white/5 hover:border-white/10 transition-colors">
+                       <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Time</span>
+                       <div className="text-sm font-bold text-white font-mono">{glazeTimeStr}</div>
+                    </div>
                     <div className="flex justify-between items-center p-3 bg-black/20 rounded border border-white/5 hover:border-white/10 transition-colors">
                        <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Glazed</span>
                        <div className="text-right">
@@ -358,7 +375,7 @@ const App: React.FC = () => {
                     <div className="flex justify-between items-center p-3 bg-black/20 rounded border border-white/5 hover:border-white/10 transition-colors">
                        <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider">Current PNL</span>
                        <div className="text-right">
-                          <div className="text-sm font-bold font-mono text-white">
+                          <div className={`text-sm font-bold font-mono ${pnlIsPositive ? 'text-emerald-400' : 'text-red-400'}`}>
                             {pnlEthStr}
                           </div>
                           <div className="text-[10px] text-zinc-600 font-mono">{pnlUsdStr}</div>
@@ -368,10 +385,10 @@ const App: React.FC = () => {
                 </div>
               </Card>
 
-              {/* SURVEILLANCE LOG */}
-              <Card 
-                className="flex-1 min-h-0" 
-                title="SURVEILLANCE_LOG" 
+              {/* SURVEILLANCE LOG - hidden on mobile */}
+              <Card
+                className="hidden lg:flex flex-1 min-h-0"
+                title="SURVEILLANCE_LOG"
                 variant="cyber"
                 noPadding
               >
@@ -381,28 +398,43 @@ const App: React.FC = () => {
                     const profile = minerAddr ? feedProfiles[minerAddr] : null;
                     const messageContent = (!item.uri || item.uri.trim().length === 0) ? "System Override" : item.uri;
                     let displayPrice = "0.000";
-                    try { displayPrice = formatEth(BigInt(item.price), 3); } catch(e) {}
+                    try { displayPrice = parseFloat(item.price).toFixed(3); } catch(e) {}
                     const isLatest = index === 0; // Feed is already desc, so 0 is latest
 
                     return (
-                      <div 
-                        key={item.id} 
+                      <div
+                        key={item.id}
                         className={`
                           p-2.5 rounded border transition-all duration-300 shrink-0
-                          ${isLatest 
-                             ? 'bg-brand-pink/10 border-brand-pink/30 shadow-[0_0_15px_rgba(236,72,153,0.15)]' 
+                          ${isLatest
+                             ? 'bg-brand-pink/10 border-brand-pink/30 shadow-[0_0_15px_rgba(236,72,153,0.15)]'
                              : 'bg-black/20 border-white/5 hover:bg-white/5 hover:border-white/10'
                           }
                         `}
                       >
-                         <div className="flex justify-between items-center mb-1">
-                            <span className={`font-mono text-[10px] font-bold uppercase tracking-wider ${isLatest ? 'text-brand-pink' : 'text-zinc-500'}`}>
-                               {profile?.username || truncateAddress(item.miner)}
-                            </span>
-                            <span className="font-mono text-[9px] text-zinc-600">Ξ{displayPrice}</span>
-                         </div>
-                         <div className={`text-xs font-mono leading-relaxed break-words ${isLatest ? 'text-white' : 'text-zinc-400'}`}>
-                           <span className="opacity-50 mr-1">&gt;</span>{messageContent}
+                         <div className="flex items-start gap-2">
+                            {/* Avatar */}
+                            <div className="shrink-0">
+                              {profile?.pfp ? (
+                                <img src={profile.pfp} className="w-6 h-6 rounded-full border border-white/10 object-cover" />
+                              ) : (
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold ${isLatest ? 'bg-brand-pink/20 text-brand-pink border border-brand-pink/30' : 'bg-zinc-800 text-zinc-500 border border-white/10'}`}>
+                                  {truncateAddress(item.miner).slice(0, 2)}
+                                </div>
+                              )}
+                            </div>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                               <div className="flex justify-between items-center mb-0.5">
+                                  <span className={`font-mono text-[10px] font-bold uppercase tracking-wider truncate ${isLatest ? 'text-brand-pink' : 'text-zinc-500'}`}>
+                                     {profile?.username || truncateAddress(item.miner)}
+                                  </span>
+                                  <span className="font-mono text-[9px] text-zinc-600 shrink-0 ml-2">Ξ{displayPrice}</span>
+                               </div>
+                               <div className={`text-xs font-mono leading-relaxed break-words ${isLatest ? 'text-white' : 'text-zinc-400'}`}>
+                                 <span className="opacity-50 mr-1">&gt;</span>{messageContent}
+                               </div>
+                            </div>
                          </div>
                       </div>
                     );
@@ -412,7 +444,7 @@ const App: React.FC = () => {
             </div>
 
             {/* --- COLUMN 2: MAIN VIEWPORT --- */}
-            <div className="col-span-12 lg:col-span-6 h-full flex flex-col gap-6 min-h-0">
+            <div className="col-span-12 lg:col-span-6 lg:h-full flex flex-col gap-4 lg:gap-6 min-h-0">
               
               {/* TV FRAME */}
               <div className="relative shrink-0 w-full group">
@@ -423,7 +455,7 @@ const App: React.FC = () => {
                  </div>
                  
                  <div className="bg-black rounded border border-zinc-800 p-1 shadow-2xl relative z-10">
-                    <TV uri={minerState.uri} glazing={isGlazing} />
+                    <TV uri={minerState.uri} glazing={isGlazing} overrideAvatar={kingProfile?.pfp} />
                  </div>
 
                  {/* Decorative bottom bracket */}
@@ -458,16 +490,12 @@ const App: React.FC = () => {
                    </Card>
                 </div>
 
-                <Card variant="cyber" className="flex-1 min-h-0" noPadding>
-                   <div className="h-full flex flex-col justify-end p-5 gap-4 relative">
-                       <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none text-brand-pink">
-                         <Terminal size={120} />
-                       </div>
-                       
-                       <div className="relative z-10 flex items-center gap-3 bg-black/40 border border-white/10 rounded px-3 py-3 focus-within:border-brand-pink/50 transition-colors">
+                <Card variant="cyber" className="flex-1" noPadding>
+                   <div className="flex flex-col p-5 gap-4 h-full justify-end">
+                       <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded px-3 py-3 focus-within:border-brand-pink/50 transition-colors">
                           <span className="text-brand-pink font-mono text-lg animate-pulse">_</span>
-                          <input 
-                              type="text" 
+                          <input
+                              type="text"
                               value={message}
                               onChange={(e) => setMessage(e.target.value)}
                               placeholder="ENTER PROTOCOL MESSAGE..."
@@ -477,16 +505,16 @@ const App: React.FC = () => {
                             />
                        </div>
 
-                       <Button 
-                         variant="primary" 
-                         fullWidth 
-                         onClick={handleGlaze} 
-                         disabled={isGlazing || !userAddress || connectionError !== null}
+                       <Button
+                         variant="primary"
+                         fullWidth
+                         onClick={handleGlaze}
+                         disabled={isGlazing || !isConnected || connectionError !== null}
                          className="h-14 !text-xl !rounded-sm !font-black tracking-widest shadow-[0_0_20px_rgba(236,72,153,0.4)] hover:shadow-[0_0_40px_rgba(236,72,153,0.6)] shrink-0"
                        >
-                         {isGlazing ? "PROCESSING..." : "INITIATE GLAZE SEQUENCE"}
+                         {isGlazing ? "PROCESSING..." : !isConnected ? "CONNECT WALLET" : "INITIATE GLAZE SEQUENCE"}
                        </Button>
-                       
+
                        {connectionError && (
                          <div className="text-xs text-red-500 font-mono text-center">{connectionError}</div>
                        )}
@@ -497,7 +525,7 @@ const App: React.FC = () => {
             </div>
 
             {/* --- COLUMN 3: STATS --- */}
-            <div className="col-span-12 lg:col-span-3 flex flex-col gap-6 min-h-0 h-full">
+            <div className="col-span-12 lg:col-span-3 flex flex-col gap-4 lg:gap-6 min-h-0 lg:h-full">
                
                {/* GLOBAL STATS */}
                <Card title="GLOBAL_METRICS" variant="cyber">
@@ -535,10 +563,10 @@ const App: React.FC = () => {
                   </div>
                </Card>
 
-               {/* USER METRICS */}
-               <Card title="USER_METRICS" variant="cyber" className="flex-1">
+               {/* USER METRICS - hidden on mobile */}
+               <Card title="USER_METRICS" variant="cyber" className="hidden lg:block lg:flex-1">
                   <div className="grid grid-cols-2 gap-x-4 gap-y-6 content-start h-full">
-                     
+
                      {/* COL 1: BALANCES */}
                      <div className="space-y-6">
                         <div className="space-y-1">
@@ -562,13 +590,13 @@ const App: React.FC = () => {
                         </div>
                      </div>
 
-                     {/* COL 2: PERFORMANCE */}
+                     {/* COL 2: PERFORMANCE (from subgraph) */}
                      <div className="space-y-6 text-right">
                         <div className="space-y-1">
                             <span className="text-[9px] font-mono text-brand-pink/80 uppercase tracking-widest">Donut Mined</span>
                             <div className="text-lg font-bold font-mono text-white tracking-tight truncate flex items-center justify-end gap-2">
                                <DonutLogo className="w-4 h-4" />
-                               {formatDonut(minerState.glazed)}
+                               {userGraphStats?.mined ? parseFloat(userGraphStats.mined).toLocaleString('en-US', { maximumFractionDigits: 0 }) : "0"}
                             </div>
                         </div>
                         <div className="space-y-1">
@@ -580,7 +608,7 @@ const App: React.FC = () => {
                         <div className="space-y-1">
                             <span className="text-[9px] font-mono text-brand-pink/80 uppercase tracking-widest">WETH Earned</span>
                             <div className="text-lg font-bold font-mono text-zinc-300 tracking-tight truncate">
-                               Ξ {userGraphStats?.revenue ? formatEth(ethers.parseEther(userGraphStats.revenue), 3) : "0.000"}
+                               Ξ {userGraphStats?.earned ? formatEth(ethers.parseEther(userGraphStats.earned), 3) : "0.000"}
                             </div>
                         </div>
                      </div>

@@ -2,18 +2,16 @@ import { ethers } from 'ethers';
 import { MinerState, Slot0, FarcasterProfile, FeedItem } from './types';
 
 // --- CONFIGURATION ---
-export const RPC_URL = "https://mainnet.base.org";
-export const MULTICALL_ADDRESS = "0x7a85CA4b4E15df2a7b927Fa56edb050d2399B34c";
-export const WETH_ADDRESS = "0x4200000000000000000000000000000000000006";
+export const RPC_URL = import.meta.env.VITE_RPC_URL;
+export const MULTICALL_ADDRESS = "0x3ec144554b484C6798A683E34c8e8E222293f323";
+export const MINER_ADDRESS = "0xF69614F4Ee8D4D3879dd53d5A039eB3114C794F6";
 const SUBGRAPH_ID = "8LAXZsz9xTzGMH2HB1F78AkoXD9yvxm2epLGr48wDhrK";
-const GRAPH_API_KEY = "7302378dbbe0ef268c60a5cee4251713";
+const GRAPH_API_KEY = import.meta.env.VITE_GRAPH_API_KEY;
 export const GRAPH_URL = `https://gateway.thegraph.com/api/${GRAPH_API_KEY}/subgraphs/id/${SUBGRAPH_ID}`;
-export const NEYNAR_API_KEY = "A197D798-429D-4B89-90E2-A11208D0C5B7";
+export const NEYNAR_API_KEY = import.meta.env.VITE_NEYNAR_API_KEY;
 
-// --- ABIS ---
-const ERC20_ABI = [
-  "function balanceOf(address owner) view returns (uint256)"
-];
+// Halving constants (from Miner contract)
+export const HALVING_PERIOD = 30 * 24 * 60 * 60; // 30 days in seconds
 
 // We use JSON ABI for the struct return to ensure Ethers v6 decodes the tuple correctly
 export const MULTICALL_ABI = [
@@ -31,10 +29,11 @@ export const MULTICALL_ABI = [
           { "name": "dps", "type": "uint256" },
           { "name": "nextDps", "type": "uint256" },
           { "name": "donutPrice", "type": "uint256" },
-          { "name": "ethBalance", "type": "uint256" },
-          { "name": "donutBalance", "type": "uint256" },
           { "name": "miner", "type": "address" },
-          { "name": "uri", "type": "string" }
+          { "name": "uri", "type": "string" },
+          { "name": "ethBalance", "type": "uint256" },
+          { "name": "wethBalance", "type": "uint256" },
+          { "name": "donutBalance", "type": "uint256" }
         ],
         "name": "state",
         "type": "tuple"
@@ -76,9 +75,42 @@ export const calculateDutchAuctionPrice = (initPrice: bigint, startTime: number)
   return (initPrice * decay) / 1000000000000000000n;
 };
 
+// --- MINER ABI (for startTime) ---
+const MINER_ABI = [
+  {
+    "inputs": [],
+    "name": "startTime",
+    "outputs": [{ "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
 // --- DATA FETCHING ---
 
-// 0. Fetch ETH Price
+// 0. Fetch Miner Start Time (for halving calculation)
+export const fetchMinerStartTime = async (): Promise<number | null> => {
+  try {
+    const provider = new ethers.JsonRpcProvider(RPC_URL);
+    const contract = new ethers.Contract(MINER_ADDRESS, MINER_ABI, provider);
+    const startTime = await contract.startTime();
+    return Number(startTime);
+  } catch (e) {
+    console.error("Failed to fetch miner startTime:", e);
+    return null;
+  }
+};
+
+// Helper: Calculate next halving timestamp
+export const calculateNextHalving = (minerStartTime: number): number => {
+  const now = Math.floor(Date.now() / 1000);
+  const elapsed = now - minerStartTime;
+  const currentHalvingNumber = Math.floor(elapsed / HALVING_PERIOD);
+  const nextHalvingNumber = currentHalvingNumber + 1;
+  return minerStartTime + (nextHalvingNumber * HALVING_PERIOD);
+};
+
+// 1. Fetch ETH Price
 export const fetchEthPrice = async (): Promise<number> => {
   try {
     const res = await fetch("https://api.coinbase.com/v2/prices/ETH-USD/spot");
@@ -95,13 +127,9 @@ export const fetchMinerState = async (userAddress: string = ethers.ZeroAddress):
   try {
     const provider = new ethers.JsonRpcProvider(RPC_URL);
     const contract = new ethers.Contract(MULTICALL_ADDRESS, MULTICALL_ABI, provider);
-    const wethContract = new ethers.Contract(WETH_ADDRESS, ERC20_ABI, provider);
 
-    const [data, wethBal] = await Promise.all([
-      contract.getMiner(userAddress),
-      userAddress !== ethers.ZeroAddress ? wethContract.balanceOf(userAddress).catch(() => 0n) : Promise.resolve(0n)
-    ]);
-    
+    const data = await contract.getMiner(userAddress);
+
     // Ethers returns the tuple as a result object
     return {
       epochId: Number(data.epochId),
@@ -115,8 +143,8 @@ export const fetchMinerState = async (userAddress: string = ethers.ZeroAddress):
       miner: data.miner,
       uri: data.uri,
       ethBalance: data.ethBalance,
-      donutBalance: data.donutBalance,
-      wethBalance: wethBal
+      wethBalance: data.wethBalance,
+      donutBalance: data.donutBalance
     };
   } catch (e) {
     console.error("RPC Error:", e);
@@ -191,8 +219,8 @@ export const fetchFarcasterProfiles = async (addresses: string[]): Promise<Recor
 
 // 4. Fetch Subgraph Data
 export const fetchGraphData = async (userAddress?: string) => {
-  const userQuery = (userAddress && userAddress !== ethers.ZeroAddress) 
-    ? `miner(id: "${userAddress.toLowerCase()}") { minted revenue spent }` 
+  const userQuery = (userAddress && userAddress !== ethers.ZeroAddress)
+    ? `account(id: "${userAddress.toLowerCase()}") { id spent earned mined }`
     : "";
 
   const query = `
@@ -204,7 +232,7 @@ export const fetchGraphData = async (userAddress?: string) => {
       glazes(first: 20, orderBy: startTime, orderDirection: desc) {
         id
         uri
-        initPrice
+        spent
         startTime
         account {
           id

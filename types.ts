@@ -39,11 +39,9 @@ export interface FarcasterProfile {
 
 export interface GraphStat {
   id: string;
-  mined: string; 
-  spent?: string;
-  revenue?: string; // WETH Earned
-  earned?: string; // Legacy support
-  epochId?: string;
+  mined: string;
+  spent: string;
+  earned: string;
 }
 
 export interface FeedItem {

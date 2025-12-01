@@ -1,31 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { DonutLogo } from './DonutLogo';
-import { ChevronLeft, ChevronRight, Circle, Video } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Circle, Video, Volume2, VolumeX } from 'lucide-react';
 
 interface TVProps {
   uri: string; // Used as an override/alert channel
   glazing?: boolean;
+  overrideAvatar?: string;
 }
 
 // Simulated Factory Feeds
 const CHANNELS = [
-  { id: 'CAM_01', name: 'MIXING_BAY_A', url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=2000', status: 'LIVE' },
-  { id: 'CAM_02', name: 'FRYER_CONTROL', url: 'https://images.unsplash.com/photo-1516937941348-c09e554b9631?auto=format&fit=crop&q=80&w=2000', status: 'LIVE' },
-  { id: 'CAM_03', name: 'GLAZING_LINE', url: 'https://images.unsplash.com/photo-1504194921103-f8b80cadd5e4?auto=format&fit=crop&q=80&w=2000', status: 'LIVE' },
-  { id: 'CAM_04', name: 'PACKING_DECK', url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=2000', status: 'LIVE' },
-  { id: 'CAM_05', name: 'EXTERIOR_S', url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2000', status: 'LOW_LIGHT' },
+  { id: 'CAM_01', name: 'DOUGH_MIXING', url: '/cam1.mp4', status: 'LIVE', isVideo: true },
+  { id: 'CAM_02', name: 'FRYER_TRANSPORT', url: '/cam2.mp4', status: 'LIVE', isVideo: true },
+  { id: 'CAM_03', name: 'GLAZE_LINE', url: '/cam3.mp4', status: 'LIVE', isVideo: true },
+  { id: 'CAM_04', name: 'GLAZE_VATS', url: '/cam4.mp4', status: 'LIVE', isVideo: true },
+  { id: 'AD_01', name: 'WE_GLAZE_THE_WORLD', url: '/cam5.mp4', status: 'LIVE', isVideo: true, hasSound: true },
 ];
 
-export const TV: React.FC<TVProps> = ({ uri, glazing }) => {
+export const TV: React.FC<TVProps> = ({ uri, glazing, overrideAvatar }) => {
   const [currentChannel, setCurrentChannel] = useState(0);
   const [isStatic, setIsStatic] = useState(false);
   const [timestamp, setTimestamp] = useState(new Date().toLocaleTimeString());
+  const [showOverrideScreen, setShowOverrideScreen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   // Clock Effect
   useEffect(() => {
     const t = setInterval(() => setTimestamp(new Date().toLocaleTimeString()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  // Show override for 10 seconds when glazing starts
+  useEffect(() => {
+    if (glazing) {
+      setShowOverrideScreen(true);
+      const timer = setTimeout(() => {
+        setShowOverrideScreen(false);
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [glazing]);
+
+  // Switch to next channel when video ends
+  const handleVideoEnded = () => {
+    if (!showOverrideScreen) {
+      switchChannel('next');
+    }
+  };
 
   // Channel Switch Logic
   const switchChannel = (direction: 'next' | 'prev') => {
@@ -41,17 +62,14 @@ export const TV: React.FC<TVProps> = ({ uri, glazing }) => {
 
   const activeCam = CHANNELS[currentChannel];
 
-  // If user provides a custom URI (like a mined block message), we override the CCTV
-  // But strictly speaking, the user asked to see the factory, so we prioritize the CCTV structure
-  // unless "glazing" (mining) is happening.
-  
-  const showOverride = glazing || (uri && uri !== "CONNECTING TO MAINNET..." && !uri.includes(" ")); 
+  // Show override screen only for 10 seconds when glazing
+  const showOverride = showOverrideScreen; 
 
   return (
-    <div className="relative w-full aspect-video bg-[#111] overflow-hidden rounded-md border-[4px] border-[#222] shadow-2xl flex flex-col group">
-      
+    <div className="relative w-full bg-[#111] rounded-md border-[4px] border-[#222] shadow-2xl flex flex-col group">
+
       {/* Screen Container */}
-      <div className="relative flex-1 w-full h-full overflow-hidden bg-black">
+      <div className="relative w-full aspect-[16/7] overflow-hidden bg-black">
         
         {/* 1. Main Feed Layer */}
         {!isStatic && (
@@ -63,22 +81,36 @@ export const TV: React.FC<TVProps> = ({ uri, glazing }) => {
                       <img src={uri} className="w-full h-full object-cover" />
                    ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-zinc-950 animate-pulse">
-                         <DonutLogo className="w-32 h-32 mb-4" />
-                         <h2 className="text-2xl font-bold text-brand-pink uppercase tracking-widest">System Override</h2>
-                         <p className="text-zinc-500 font-mono text-xs">{uri}</p>
+                         {overrideAvatar ? (
+                           <img src={overrideAvatar} className="w-16 h-16 rounded-full border-2 border-brand-pink shadow-[0_0_20px_rgba(236,72,153,0.5)] mb-3" />
+                         ) : (
+                           <DonutLogo className="w-16 h-16 mb-3" />
+                         )}
+                         <h2 className="text-lg font-bold text-brand-pink uppercase tracking-widest">System Override</h2>
+                         <p className="text-zinc-500 font-mono text-[10px]">{uri}</p>
                       </div>
                    )}
                 </div>
              ) : (
                 // Standard CCTV Mode
                 <div className="w-full h-full relative overflow-hidden">
-                  <img 
-                    src={activeCam.url} 
-                    className="w-full h-full object-cover filter contrast-125 brightness-75 sepia-[0.3] grayscale-[0.5] scale-110 animate-[pan_30s_linear_infinite_alternate]"
-                    alt="CCTV Feed"
-                  />
-                  {/* Vignette */}
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.8)_100%)]"></div>
+                  {activeCam.isVideo ? (
+                    <video
+                      key={currentChannel}
+                      src={activeCam.url}
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      muted={isMuted}
+                      playsInline
+                      onEnded={handleVideoEnded}
+                    />
+                  ) : (
+                    <img
+                      src={activeCam.url}
+                      className="w-full h-full object-cover filter contrast-125 brightness-75 sepia-[0.3] grayscale-[0.5] scale-110 animate-[pan_30s_linear_infinite_alternate]"
+                      alt="CCTV Feed"
+                    />
+                  )}
                 </div>
              )}
           </div>
@@ -153,11 +185,17 @@ export const TV: React.FC<TVProps> = ({ uri, glazing }) => {
                   ></div>
                ))}
             </div>
-            <button 
+            <button
               onClick={() => switchChannel('next')}
               className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-colors"
             >
               <ChevronRight size={16} />
+            </button>
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/10 rounded transition-colors ml-2"
+            >
+              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
          </div>
 

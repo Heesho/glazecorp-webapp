@@ -108,23 +108,30 @@
       .bg-noise {
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
       }
+
+      /* Fix RainbowKit CSS conflicts */
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      html, body, #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      /* Ensure RainbowKit provider wrappers don't break layout */
+      #root > div {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@18.2.0/",
-    "react": "https://esm.sh/react@18.2.0",
-    "react-dom/": "https://esm.sh/react-dom@18.2.0/",
-    "react-dom": "https://esm.sh/react-dom@18.2.0",
-    "lucide-react": "https://esm.sh/lucide-react@0.309.0",
-    "ethers": "https://esm.sh/ethers@6.11.1"
-  }
-}
-</script>
 </head>
   <body class="bg-[#020202] text-zinc-300 antialiased h-screen w-screen flex flex-col overflow-hidden relative selection:bg-brand-pink selection:text-white">
     <div class="absolute inset-0 bg-grid pointer-events-none z-0"></div>
     <div id="root" class="h-full w-full relative z-10"></div>
     <div class="scanlines pointer-events-none"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
