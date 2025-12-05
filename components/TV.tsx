@@ -15,6 +15,7 @@ const CHANNELS = [
   { id: 'CAM_03', name: 'GLAZE_LINE', url: '/cam3.mp4', status: 'LIVE', isVideo: true },
   { id: 'CAM_04', name: 'GLAZE_VATS', url: '/cam4.mp4', status: 'LIVE', isVideo: true },
   { id: 'AD_01', name: 'WE_GLAZE_THE_WORLD', url: '/cam5.mp4', status: 'LIVE', isVideo: true, hasSound: true },
+  { id: 'AD_02', name: 'FARPLACE', url: '/cam6.mp4', status: 'LIVE', isVideo: true, hasSound: true },
 ];
 
 export const TV: React.FC<TVProps> = ({ uri, glazing, overrideAvatar }) => {
