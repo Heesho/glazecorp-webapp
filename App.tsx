@@ -191,10 +191,9 @@ const App: React.FC = () => {
       const deadline = Math.floor(Date.now()/1000) + 300;
       const priceVal = BigInt(currentPrice);
       const valueToSend = priceVal + (priceVal / 10n);
-      const shopAddress = "0xba366c82815983ff130c23ced78bd95e1f2c18ea";
 
       const tx = await contract.mine(
-        shopAddress,
+        userAddress,
         epochId,
         deadline,
         valueToSend,
@@ -265,6 +264,8 @@ const App: React.FC = () => {
   
   const currentPriceEth = parseFloat(ethers.formatEther(currentPrice));
   const currentPriceUsd = currentPriceEth * ethPrice;
+  const rebatePriceEth = currentPriceEth * 0.95; // 5% rebate
+  const rebatePriceUsd = rebatePriceEth * ethPrice;
 
   const donutPriceEth = parseFloat(ethers.formatEther(safeDonutPrice));
   const donutPriceUsd = donutPriceEth * ethPrice;
@@ -491,11 +492,16 @@ const App: React.FC = () => {
                    
                    <Card variant="cyber" className="justify-center" noPadding>
                       <div className="p-4 flex flex-col items-center text-center">
-                         <div className="text-[10px] font-mono uppercase text-zinc-500 tracking-widest mb-1">Current Glaze Price</div>
-                         <div className="text-3xl font-bold font-mono text-brand-pink tracking-tighter shadow-brand-pink drop-shadow-sm">
-                           Ξ {currentPriceEth.toFixed(4)}
+                         <div className="text-[10px] font-mono uppercase text-zinc-500 tracking-widest mb-1">Glaze Price <span className="text-green-400">(5% Rebate)</span></div>
+                         <div className="flex items-baseline gap-2">
+                           <div className="text-3xl font-bold font-mono text-brand-pink tracking-tighter shadow-brand-pink drop-shadow-sm">
+                             Ξ{rebatePriceEth.toFixed(5)}
+                           </div>
+                           <div className="text-lg font-mono text-zinc-500 line-through">
+                             Ξ{currentPriceEth.toFixed(5)}
+                           </div>
                          </div>
-                         <div className="text-[10px] font-mono text-zinc-600 mt-1">${currentPriceUsd.toFixed(2)}</div>
+                         <div className="text-[10px] font-mono text-zinc-600 mt-1">${rebatePriceUsd.toFixed(2)}</div>
                       </div>
                    </Card>
                 </div>
