@@ -1,0 +1,615 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   GLAZECORP - Design System
+   Evil Megacorp Aesthetic: Grayscale + Pink
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Brand Colors */
+    --glaze-50: 253 242 248;
+    --glaze-100: 252 231 243;
+    --glaze-200: 251 207 232;
+    --glaze-300: 249 168 212;
+    --glaze-400: 244 114 182;
+    --glaze-500: 236 72 153;
+    --glaze-600: 219 39 119;
+    --glaze-700: 190 24 93;
+    --glaze-800: 157 23 77;
+    --glaze-900: 131 24 67;
+
+    /* Corporate Grays */
+    --corp-50: 250 250 250;
+    --corp-100: 244 244 245;
+    --corp-200: 228 228 231;
+    --corp-300: 212 212 216;
+    --corp-400: 161 161 170;
+    --corp-500: 113 113 122;
+    --corp-600: 82 82 91;
+    --corp-700: 63 63 70;
+    --corp-800: 39 39 42;
+    --corp-900: 24 24 27;
+    --corp-950: 9 9 11;
+
+    /* Semantic */
+    --background: var(--corp-950);
+    --foreground: var(--corp-50);
+    --card: 15 15 16;
+    --card-foreground: var(--corp-50);
+    --muted: var(--corp-900);
+    --muted-foreground: var(--corp-400);
+    --accent: var(--glaze-500);
+    --accent-foreground: 255 255 255;
+    --border: var(--corp-800);
+    --input: var(--corp-800);
+    --ring: var(--glaze-500);
+    --destructive: 239 68 68;
+    --destructive-foreground: var(--corp-50);
+    --success: 34 197 94;
+    --success-foreground: var(--corp-50);
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+}
+
+/* ============================================
+   Reset & Base Typography
+   ============================================ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    height: 100%;
+    width: 100%;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  body {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
+    font-family: var(--font-inter), Inter, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
+  }
+}
+
+/* ============================================
+   Hidden Scrollbar
+   ============================================ */
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* ============================================
+   Selection
+   ============================================ */
+
+::selection {
+  background-color: rgb(var(--glaze-500));
+  color: white;
+}
+
+/* ============================================
+   Focus States
+   ============================================ */
+
+@layer base {
+  *:focus-visible {
+    outline: 2px solid rgb(var(--glaze-500));
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================
+   Text Effects
+   ============================================ */
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 20px rgba(236, 72, 153, 0.5);
+  }
+
+  .text-glow-sm {
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.4);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, rgb(var(--corp-50)) 0%, rgb(var(--glaze-400)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+/* ============================================
+   Box Effects
+   ============================================ */
+
+@layer utilities {
+  .box-glow {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.2);
+  }
+
+  .box-glow-lg {
+    box-shadow: 0 0 40px rgba(236, 72, 153, 0.3);
+  }
+
+  .border-glow {
+    border-color: rgba(236, 72, 153, 0.3);
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.15);
+  }
+}
+
+/* ============================================
+   Background Effects
+   ============================================ */
+
+@layer utilities {
+  .bg-gradient-corp {
+    background: linear-gradient(180deg, rgb(var(--corp-950)) 0%, rgb(var(--corp-900)) 100%);
+  }
+
+  .bg-gradient-glaze {
+    background: linear-gradient(135deg, rgb(var(--glaze-600)) 0%, rgb(var(--glaze-500)) 100%);
+  }
+
+  .bg-glass {
+    background: rgba(var(--corp-900), 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .bg-grid {
+    background-size: 40px 40px;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  .bg-donuts {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='12' stroke='rgba(236,72,153,0.04)' stroke-width='2' fill='none'/%3E%3Ccircle cx='30' cy='30' r='5' stroke='rgba(236,72,153,0.03)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-size: 60px 60px;
+  }
+
+  .bg-donuts-sparse {
+    background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='60' cy='60' r='20' stroke='rgba(236,72,153,0.03)' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='60' r='8' stroke='rgba(255,255,255,0.02)' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+
+  .bg-donuts-large {
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='100' cy='100' r='40' stroke='rgba(236,72,153,0.025)' stroke-width='2' fill='none'/%3E%3Ccircle cx='100' cy='100' r='16' stroke='rgba(255,255,255,0.015)' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+  }
+
+  /* Premium Gradient Backgrounds */
+  .bg-gradient-radial {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(236, 72, 153, 0.15), transparent),
+      rgb(var(--corp-950));
+  }
+
+  .bg-gradient-radial-subtle {
+    background:
+      radial-gradient(ellipse 100% 80% at 50% -30%, rgba(236, 72, 153, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 0%, rgba(139, 92, 246, 0.05), transparent),
+      rgb(var(--corp-950));
+  }
+
+  .bg-gradient-mesh {
+    background:
+      radial-gradient(at 27% 37%, rgba(236, 72, 153, 0.1) 0px, transparent 50%),
+      radial-gradient(at 97% 21%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+      radial-gradient(at 52% 99%, rgba(236, 72, 153, 0.05) 0px, transparent 50%),
+      radial-gradient(at 10% 29%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
+      rgb(var(--corp-950));
+  }
+
+  .bg-gradient-spotlight {
+    background:
+      radial-gradient(ellipse 50% 80% at 50% 0%, rgba(255, 255, 255, 0.03), transparent),
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(236, 72, 153, 0.12), transparent),
+      rgb(var(--corp-950));
+  }
+
+  .bg-gradient-glow {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 0% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 100% 80%, rgba(236, 72, 153, 0.08) 0%, transparent 40%),
+      linear-gradient(to bottom, rgb(var(--corp-950)), rgb(9, 9, 11));
+  }
+
+  .bg-gradient-aurora {
+    background:
+      linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+      linear-gradient(225deg, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+      linear-gradient(315deg, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      rgb(var(--corp-950));
+  }
+
+  /* Vibrant blob backgrounds */
+  .bg-blobs {
+    background-color: #000;
+    background-image:
+      radial-gradient(at 0% 0%, rgba(236, 72, 153, 0.4) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(255, 255, 255, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(255, 255, 255, 0.1) 0px, transparent 50%);
+  }
+
+  .bg-blobs-vibrant {
+    background-color: #000;
+    background-image:
+      radial-gradient(ellipse 80% 80% at 0% 0%, rgba(236, 72, 153, 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 60% at 100% 10%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse 70% 70% at 90% 90%, rgba(244, 114, 182, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 50% at 10% 80%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(236, 72, 153, 0.2) 0%, transparent 50%);
+  }
+
+  .bg-blobs-soft {
+    background-color: #050505;
+    background-image:
+      radial-gradient(ellipse 100% 100% at -10% -10%, rgba(236, 72, 153, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 80% 80% at 110% 0%, rgba(255, 255, 255, 0.12) 0%, transparent 50%),
+      radial-gradient(ellipse 90% 90% at 100% 100%, rgba(236, 72, 153, 0.25) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 60% at 0% 100%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  }
+
+  /* Ethereal/Dreamy Gradients - soft diffused orbs */
+  .bg-ethereal {
+    background-color: #0a0a0a;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='800' height='800' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3C!-- Large donuts --%3E%3Ccircle cx='120' cy='80' r='45' stroke='rgba(236,72,153,0.025)' stroke-width='2' fill='none'/%3E%3Ccircle cx='120' cy='80' r='18' stroke='rgba(255,255,255,0.015)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='650' cy='200' r='55' stroke='rgba(236,72,153,0.02)' stroke-width='2' fill='none'/%3E%3Ccircle cx='650' cy='200' r='22' stroke='rgba(255,255,255,0.012)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='400' cy='650' r='50' stroke='rgba(236,72,153,0.022)' stroke-width='2' fill='none'/%3E%3Ccircle cx='400' cy='650' r='20' stroke='rgba(255,255,255,0.014)' stroke-width='1.5' fill='none'/%3E%3C!-- Medium donuts --%3E%3Ccircle cx='300' cy='150' r='30' stroke='rgba(236,72,153,0.03)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='300' cy='150' r='12' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='700' cy='500' r='35' stroke='rgba(236,72,153,0.025)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='700' cy='500' r='14' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3Ccircle cx='80' cy='400' r='28' stroke='rgba(236,72,153,0.028)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='80' cy='400' r='11' stroke='rgba(255,255,255,0.018)' stroke-width='1' fill='none'/%3E%3Ccircle cx='550' cy='750' r='32' stroke='rgba(236,72,153,0.024)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='550' cy='750' r='13' stroke='rgba(255,255,255,0.016)' stroke-width='1' fill='none'/%3E%3C!-- Small donuts --%3E%3Ccircle cx='500' cy='100' r='18' stroke='rgba(236,72,153,0.035)' stroke-width='1' fill='none'/%3E%3Ccircle cx='500' cy='100' r='7' stroke='rgba(255,255,255,0.025)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='20' stroke='rgba(236,72,153,0.032)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='8' stroke='rgba(255,255,255,0.022)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='15' stroke='rgba(236,72,153,0.038)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='6' stroke='rgba(255,255,255,0.028)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='22' stroke='rgba(236,72,153,0.03)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='9' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='25' stroke='rgba(236,72,153,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='10' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 150% 100% at 50% -50%, rgba(236, 72, 153, 0.15) 0%, transparent 70%),
+      radial-gradient(ellipse 100% 150% at -20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 100% 100% at 120% 80%, rgba(244, 114, 182, 0.12) 0%, transparent 60%);
+    background-size: 800px 800px, 100% 100%, 100% 100%, 100% 100%;
+  }
+
+  .bg-ethereal-pink {
+    background: linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%);
+    background-image:
+      radial-gradient(ellipse 120% 80% at 50% 0%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 120% at 0% 100%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 80% at 100% 100%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+      linear-gradient(180deg, #0d0d0d 0%, #0a0a0a 100%);
+  }
+
+  .bg-haze {
+    background: #080808;
+    background-image:
+      radial-gradient(ellipse 200% 100% at 50% -20%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 200% at 100% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 100% 200% at 0% 50%, rgba(236, 72, 153, 0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 150% 100% at 50% 120%, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
+  }
+
+  .bg-orb {
+    background: #050505;
+    background-image:
+      radial-gradient(circle 800px at 50% 30%, rgba(236, 72, 153, 0.12) 0%, transparent 60%),
+      radial-gradient(circle 600px at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle 400px at 10% 90%, rgba(244, 114, 182, 0.08) 0%, transparent 50%);
+  }
+
+  .bg-glow-center {
+    background: #000;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+  }
+
+  .bg-sweep {
+    background: linear-gradient(135deg,
+      #0a0a0a 0%,
+      #0d0608 25%,
+      #0a0a0a 50%,
+      #08080a 75%,
+      #0a0a0a 100%
+    );
+    background-image:
+      radial-gradient(ellipse 100% 100% at 0% 0%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 100% at 100% 100%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      linear-gradient(135deg, #0a0a0a 0%, #0d0608 25%, #0a0a0a 50%, #08080a 75%, #0a0a0a 100%);
+  }
+
+  /* Cool/Striking Gradients */
+  .bg-neon-glow {
+    background: #000;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 80% at 0% 100%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 50% at 100% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+      linear-gradient(180deg, #000 0%, #050208 50%, #000 100%);
+  }
+
+  .bg-spotlight {
+    background: #000;
+    background-image:
+      radial-gradient(circle 600px at 70% 20%, rgba(236, 72, 153, 0.35) 0%, transparent 60%),
+      radial-gradient(circle 400px at 30% 80%, rgba(244, 114, 182, 0.2) 0%, transparent 50%),
+      radial-gradient(circle 300px at 90% 90%, rgba(255, 255, 255, 0.06) 0%, transparent 50%),
+      linear-gradient(135deg, #000 0%, #0a0408 100%);
+  }
+
+  .bg-vortex {
+    background: #000;
+    background-image:
+      conic-gradient(from 180deg at 50% 50%, rgba(236, 72, 153, 0.15) 0deg, transparent 60deg, transparent 180deg, rgba(236, 72, 153, 0.1) 240deg, transparent 360deg),
+      radial-gradient(ellipse 100% 100% at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.8) 70%),
+      radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.2) 0%, transparent 40%);
+  }
+
+  .bg-waves {
+    background: #000;
+    background-image:
+      radial-gradient(ellipse 200% 100% at 50% 0%, rgba(236, 72, 153, 0.25) 0%, transparent 40%),
+      radial-gradient(ellipse 150% 80% at 0% 50%, rgba(255, 255, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse 200% 100% at 50% 100%, rgba(236, 72, 153, 0.15) 0%, transparent 40%),
+      radial-gradient(ellipse 150% 80% at 100% 50%, rgba(244, 114, 182, 0.08) 0%, transparent 50%);
+  }
+
+  .bg-nebula {
+    background: #000;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='800' height='800' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3C!-- Large donuts --%3E%3Ccircle cx='120' cy='80' r='45' stroke='rgba(236,72,153,0.025)' stroke-width='2' fill='none'/%3E%3Ccircle cx='120' cy='80' r='18' stroke='rgba(255,255,255,0.015)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='650' cy='200' r='55' stroke='rgba(236,72,153,0.02)' stroke-width='2' fill='none'/%3E%3Ccircle cx='650' cy='200' r='22' stroke='rgba(255,255,255,0.012)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='400' cy='650' r='50' stroke='rgba(236,72,153,0.022)' stroke-width='2' fill='none'/%3E%3Ccircle cx='400' cy='650' r='20' stroke='rgba(255,255,255,0.014)' stroke-width='1.5' fill='none'/%3E%3C!-- Medium donuts --%3E%3Ccircle cx='300' cy='150' r='30' stroke='rgba(236,72,153,0.03)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='300' cy='150' r='12' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='700' cy='500' r='35' stroke='rgba(236,72,153,0.025)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='700' cy='500' r='14' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3Ccircle cx='80' cy='400' r='28' stroke='rgba(236,72,153,0.028)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='80' cy='400' r='11' stroke='rgba(255,255,255,0.018)' stroke-width='1' fill='none'/%3E%3Ccircle cx='550' cy='750' r='32' stroke='rgba(236,72,153,0.024)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='550' cy='750' r='13' stroke='rgba(255,255,255,0.016)' stroke-width='1' fill='none'/%3E%3C!-- Small donuts --%3E%3Ccircle cx='500' cy='100' r='18' stroke='rgba(236,72,153,0.035)' stroke-width='1' fill='none'/%3E%3Ccircle cx='500' cy='100' r='7' stroke='rgba(255,255,255,0.025)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='20' stroke='rgba(236,72,153,0.032)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='8' stroke='rgba(255,255,255,0.022)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='15' stroke='rgba(236,72,153,0.038)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='6' stroke='rgba(255,255,255,0.028)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='22' stroke='rgba(236,72,153,0.03)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='9' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='25' stroke='rgba(236,72,153,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='10' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3C/svg%3E"),
+      radial-gradient(ellipse 100% 60% at 70% 10%, rgba(236, 72, 153, 0.5) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 80% at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 40%),
+      radial-gradient(ellipse 60% 100% at 90% 70%, rgba(244, 114, 182, 0.25) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 60% at 10% 90%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+      linear-gradient(180deg, #000 0%, #030103 100%);
+    background-size: 800px 800px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  }
+
+  .bg-aurora-dark {
+    background: #000;
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='800' height='800' viewBox='0 0 800 800' xmlns='http://www.w3.org/2000/svg'%3E%3C!-- Large donuts --%3E%3Ccircle cx='120' cy='80' r='45' stroke='rgba(236,72,153,0.025)' stroke-width='2' fill='none'/%3E%3Ccircle cx='120' cy='80' r='18' stroke='rgba(255,255,255,0.015)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='650' cy='200' r='55' stroke='rgba(236,72,153,0.02)' stroke-width='2' fill='none'/%3E%3Ccircle cx='650' cy='200' r='22' stroke='rgba(255,255,255,0.012)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='400' cy='650' r='50' stroke='rgba(236,72,153,0.022)' stroke-width='2' fill='none'/%3E%3Ccircle cx='400' cy='650' r='20' stroke='rgba(255,255,255,0.014)' stroke-width='1.5' fill='none'/%3E%3C!-- Medium donuts --%3E%3Ccircle cx='300' cy='150' r='30' stroke='rgba(236,72,153,0.03)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='300' cy='150' r='12' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='700' cy='500' r='35' stroke='rgba(236,72,153,0.025)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='700' cy='500' r='14' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3Ccircle cx='80' cy='400' r='28' stroke='rgba(236,72,153,0.028)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='80' cy='400' r='11' stroke='rgba(255,255,255,0.018)' stroke-width='1' fill='none'/%3E%3Ccircle cx='550' cy='750' r='32' stroke='rgba(236,72,153,0.024)' stroke-width='1.5' fill='none'/%3E%3Ccircle cx='550' cy='750' r='13' stroke='rgba(255,255,255,0.016)' stroke-width='1' fill='none'/%3E%3C!-- Small donuts --%3E%3Ccircle cx='500' cy='100' r='18' stroke='rgba(236,72,153,0.035)' stroke-width='1' fill='none'/%3E%3Ccircle cx='500' cy='100' r='7' stroke='rgba(255,255,255,0.025)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='20' stroke='rgba(236,72,153,0.032)' stroke-width='1' fill='none'/%3E%3Ccircle cx='180' cy='600' r='8' stroke='rgba(255,255,255,0.022)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='15' stroke='rgba(236,72,153,0.038)' stroke-width='1' fill='none'/%3E%3Ccircle cx='750' cy='350' r='6' stroke='rgba(255,255,255,0.028)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='22' stroke='rgba(236,72,153,0.03)' stroke-width='1' fill='none'/%3E%3Ccircle cx='50' cy='700' r='9' stroke='rgba(255,255,255,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='25' stroke='rgba(236,72,153,0.02)' stroke-width='1' fill='none'/%3E%3Ccircle cx='350' cy='350' r='10' stroke='rgba(255,255,255,0.015)' stroke-width='1' fill='none'/%3E%3C/svg%3E"),
+      linear-gradient(180deg, transparent 0%, rgba(236, 72, 153, 0.1) 20%, transparent 40%),
+      linear-gradient(180deg, transparent 60%, rgba(244, 114, 182, 0.08) 80%, transparent 100%),
+      radial-gradient(ellipse 150% 50% at 50% 0%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+      radial-gradient(ellipse 100% 100% at 100% 100%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    background-size: 800px 800px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  }
+
+  .bg-pulse {
+    background: #000;
+    background-image:
+      radial-gradient(circle 500px at 50% 30%, rgba(236, 72, 153, 0.4) 0%, rgba(236, 72, 153, 0.1) 30%, transparent 60%),
+      radial-gradient(circle 300px at 20% 70%, rgba(244, 114, 182, 0.15) 0%, transparent 50%),
+      radial-gradient(circle 200px at 80% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  }
+}
+
+/* ============================================
+   Card Styles
+   ============================================ */
+
+@layer components {
+  .card-corp {
+    background: rgb(var(--card));
+    border: 1px solid rgb(var(--border));
+    border-radius: var(--radius);
+  }
+
+  .card-corp-elevated {
+    background: rgb(var(--card));
+    border: 1px solid rgb(var(--border));
+    border-radius: var(--radius);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-glaze {
+    background: rgb(var(--card));
+    border: 1px solid rgba(236, 72, 153, 0.2);
+    border-radius: var(--radius);
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.1);
+  }
+}
+
+/* ============================================
+   Button Base Styles
+   ============================================ */
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    transition: all 150ms ease;
+    cursor: pointer;
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: rgb(var(--glaze-500));
+    color: white;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: rgb(var(--glaze-600));
+  }
+
+  .btn-secondary {
+    background: rgb(var(--corp-800));
+    color: rgb(var(--corp-100));
+    border: 1px solid rgb(var(--corp-700));
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: rgb(var(--corp-700));
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: rgb(var(--corp-300));
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: rgb(var(--corp-800));
+    color: rgb(var(--corp-100));
+  }
+}
+
+/* ============================================
+   Input Base Styles
+   ============================================ */
+
+@layer components {
+  .input-corp {
+    width: 100%;
+    background: rgb(var(--corp-900));
+    border: 1px solid rgb(var(--border));
+    border-radius: var(--radius);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    color: rgb(var(--foreground));
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .input-corp::placeholder {
+    color: rgb(var(--corp-500));
+  }
+
+  .input-corp:focus {
+    outline: none;
+    border-color: rgb(var(--glaze-500));
+    box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+  }
+}
+
+/* ============================================
+   Layout Utilities
+   ============================================ */
+
+@layer utilities {
+  .h-screen-safe {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+/* ============================================
+   Animation Utilities
+   ============================================ */
+
+@layer utilities {
+  .animate-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bumpGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.8);
+  }
+}
+
+@keyframes bumpEnter {
+  0% {
+    transform: translateY(-20px);
+    opacity: 0;
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.8);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(236, 72, 153, 1);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+  }
+}
+
+@layer utilities {
+  .animate-bump-glow {
+    animation: bumpGlow 2s ease-in-out infinite;
+  }
+
+  .animate-bump-enter {
+    animation: bumpEnter 0.5s ease-out forwards;
+  }
+}

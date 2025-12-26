@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(npm install)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:docs.neynar.com)",
+      "WebSearch",
+      "Bash(claude mcp add:*)",
+      "Read(//c/Users/helhu/**)",
+      "Bash(claude mcp:*)",
+      "mcp__Neynar__SearchNeynar",
+      "WebFetch(domain:api.neynar.com)",
+      "Bash(npx tsc:*)",
+      "Bash(yarn shadcn@latest mcp init:*)",
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx next lint:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nUpdate auctions to use LSG strategies, add swap improvements and UI updates\n\n- Rewrite useAuctions hook to fetch LSG strategies via getAllStrategiesData\n- Update AuctionsPanel to display strategies with vote percentages and payment tokens\n- Add UniswapV2 fallback for DONUT swaps when Kyber has no route\n- Update governance contract addresses \\(GovernanceToken, Voter, Multicall\\)\n- Fix TypeScript errors in useMineRig and useRigState hooks\n- Add new UI components \\(Dialog, Input, Separator\\)\n- Various styling and layout improvements\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git clone:*)",
+      "Bash(jq:*)",
+      "Bash(kill:*)",
+      "Bash(xargs kill:*)",
+      "Bash(npm run dev)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
