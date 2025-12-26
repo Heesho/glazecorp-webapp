@@ -118,6 +118,20 @@ export default function RigDetailPage() {
     fetchRigData();
   }, [rigAddress]);
 
+  // Poll epochs for updates
+  useEffect(() => {
+    if (!rigAddress) return;
+    const pollEpochs = async () => {
+      const rigEpochs = await getRigEpochs(rigAddress, 10);
+      setEpochs(rigEpochs);
+      // Also refetch rig data for updated stats
+      const fetchedRig = await getRig(rigAddress);
+      if (fetchedRig) setRig(fetchedRig);
+    };
+    const interval = setInterval(pollEpochs, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, [rigAddress]);
+
   const { rigState, rigInfo, refetch, isLoading: isLoadingState } = useRigState(rig);
 
   const { mineStep, mineResult, isBusy: isMining, handleMine } = useMineRig(
