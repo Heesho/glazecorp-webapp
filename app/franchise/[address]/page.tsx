@@ -273,14 +273,9 @@ export default function RigDetailPage() {
             <ArrowLeft size={14} />
             <span className="text-xs font-medium">Back to Explore</span>
           </button>
-          <div className="flex items-center gap-3">
-            {imageUrl && (
-              <img src={imageUrl} alt={rig.name} className="w-8 h-8 rounded-full object-cover" />
-            )}
-            <div className="text-right">
-              <h1 className="text-lg font-bold text-white">{rig.name || "Unknown Rig"}</h1>
-              <span className="text-xs text-corp-500 font-mono">${rig.symbol}</span>
-            </div>
+          <div className="text-right">
+            <h1 className="text-lg font-bold text-white">{rig.name || "Unknown Rig"}</h1>
+            <span className="text-xs text-corp-500 font-mono">${rig.symbol}</span>
           </div>
         </div>
 
