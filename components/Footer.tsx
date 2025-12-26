@@ -35,8 +35,8 @@ const RESOURCE_LINKS: FooterLink[] = [
 ];
 
 const COMMUNITY_LINKS: FooterLink[] = [
-  { label: "X (Twitter)", href: "#", icon: XIcon, disabled: true },
-  { label: "Farcaster", href: "#", icon: FarcasterIcon, disabled: true },
+  { label: "X (Twitter)", href: "https://x.com/Glaze_Corp", icon: XIcon },
+  { label: "Farcaster", href: "https://warpcast.com/~/channel/donut", icon: FarcasterIcon },
   { label: "Discord", href: "#", icon: MessageCircle, disabled: true },
 ];
 
