@@ -28,7 +28,9 @@
       "Bash(jq:*)",
       "Bash(kill:*)",
       "Bash(xargs kill:*)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []

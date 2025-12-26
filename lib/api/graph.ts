@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 
-const GRAPH_URL = "https://api.goldsky.com/api/public/project_cmgscxhw81j5601xmhgd42rej/subgraphs/donut-miner/1.0.0/gn";
+const GRAPH_URL = process.env.NEXT_PUBLIC_MINER_SUBGRAPH_URL || "https://api.goldsky.com/api/public/project_cmgscxhw81j5601xmhgd42rej/subgraphs/donut-miner/1.0.0/gn";
 
 export interface GraphResponse {
   miners?: Array<{ revenue: string; minted: string }>;
