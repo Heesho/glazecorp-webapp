@@ -12,7 +12,7 @@ import {
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 const NAV_ITEMS = [
-  { href: "/", icon: Hammer, label: "Mine" },
+  { href: "/mine", icon: Hammer, label: "Mine" },
   { href: "/swap", icon: ArrowLeftRight, label: "Swap" },
   { href: "/govern", icon: Vote, label: "Vote" },
   { href: "/franchise", icon: Store, label: "Franchise" },
@@ -23,7 +23,7 @@ export function Header() {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/";
+    if (href === "/mine") return pathname === "/mine";
     return pathname.startsWith(href);
   };
 

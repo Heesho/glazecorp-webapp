@@ -6,6 +6,7 @@ import { TrendingUp, Clock, Flame, ChevronLeft, ChevronRight } from "lucide-reac
 
 import { useExploreRigs, type SortMode } from "../hooks/useExploreRigs";
 import { type SubgraphRig, ipfsToHttp, fetchRigMetadata, calculateCurrentPrice } from "@/lib/api/launchpad";
+import { fetchEthPrice } from "@/lib/api/price";
 import { Button } from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Input";
 
@@ -22,7 +23,7 @@ const formatEth = (value: string) => {
   return num.toFixed(3);
 };
 
-function RigCard({ rig, isBumped }: { rig: SubgraphRig; isBumped?: boolean }) {
+function RigCard({ rig, isBumped, ethPriceUsd }: { rig: SubgraphRig; isBumped?: boolean; ethPriceUsd: number }) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [currentPrice, setCurrentPrice] = useState(0);
 
@@ -44,9 +45,10 @@ function RigCard({ rig, isBumped }: { rig: SubgraphRig; isBumped?: boolean }) {
     return () => clearInterval(interval);
   }, [rig]);
 
-  // Market cap = minted tokens * current token price (in ETH)
+  // Market cap = minted tokens * current token price (in ETH) * ETH price (in USD)
   const totalMinted = parseFloat(rig.minted || "0");
   const marketCapEth = totalMinted * currentPrice;
+  const marketCapUsd = marketCapEth * ethPriceUsd;
 
   return (
     <Link
@@ -83,7 +85,7 @@ function RigCard({ rig, isBumped }: { rig: SubgraphRig; isBumped?: boolean }) {
         {/* Mine Price & Market Cap */}
         <div className="flex items-center justify-between text-[11px] font-mono">
           <span className="text-glaze-400">Ξ{currentPrice.toFixed(4)}</span>
-          <span className="text-zinc-500">MC Ξ{marketCapEth >= 1 ? marketCapEth.toFixed(2) : marketCapEth.toFixed(4)}</span>
+          <span className="text-zinc-500">MC ${marketCapUsd >= 1000 ? `${(marketCapUsd / 1000).toFixed(1)}K` : marketCapUsd.toFixed(0)}</span>
         </div>
       </div>
     </Link>
@@ -102,6 +104,15 @@ export function ExplorePanel() {
     setPage,
     totalPages,
   } = useExploreRigs();
+
+  const [ethPriceUsd, setEthPriceUsd] = useState(0);
+
+  // Fetch ETH price
+  useEffect(() => {
+    fetchEthPrice().then(setEthPriceUsd);
+    const interval = setInterval(() => fetchEthPrice().then(setEthPriceUsd), 60_000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Track bumped rigs for animation
   const prevRigOrderRef = useRef<string[]>([]);
@@ -224,6 +235,7 @@ export function ExplorePanel() {
                 key={rig.id}
                 rig={rig}
                 isBumped={bumpedIds.has(rig.id)}
+                ethPriceUsd={ethPriceUsd}
               />
             ))}
           </div>

@@ -305,10 +305,9 @@ export default function RigDetailPage() {
                   <span className="text-xs text-corp-500">Glazed</span>
                   <div className="text-right">
                     <div className="text-sm text-corp-100 font-medium flex items-center justify-end gap-1">
-                      <TokenIcon imageUrl={imageUrl} symbol={rig.symbol} />
-                      {accruedTokensStr}
+                      +<TokenIcon imageUrl={imageUrl} symbol={rig.symbol} />{accruedTokensStr}
                     </div>
-                    <div className="text-[11px] text-corp-500">${accruedValueUsd.toFixed(2)}</div>
+                    <div className="text-[11px] text-corp-500">+${accruedValueUsd.toFixed(2)}</div>
                   </div>
                 </div>
                 <div className="flex justify-between items-start">
