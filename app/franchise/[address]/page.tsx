@@ -250,14 +250,25 @@ export default function RigDetailPage() {
   return (
     <div className="pt-2">
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push("/franchise")}
-          className="flex items-center gap-2 text-corp-500 hover:text-corp-300 transition-colors mb-4"
-        >
-          <ArrowLeft size={14} />
-          <span className="text-xs font-medium">Back to Explore</span>
-        </button>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={() => router.push("/franchise")}
+            className="flex items-center gap-2 text-corp-500 hover:text-corp-300 transition-colors"
+          >
+            <ArrowLeft size={14} />
+            <span className="text-xs font-medium">Back to Explore</span>
+          </button>
+          <div className="flex items-center gap-3">
+            {imageUrl && (
+              <img src={imageUrl} alt={rig.name} className="w-8 h-8 rounded-full object-cover" />
+            )}
+            <div className="text-right">
+              <h1 className="text-lg font-bold text-white">{rig.name || "Unknown Rig"}</h1>
+              <span className="text-xs text-corp-500 font-mono">${rig.symbol}</span>
+            </div>
+          </div>
+        </div>
 
         {/* Two Column Layout */}
         <div className="flex flex-col lg:flex-row lg:items-start gap-6">
