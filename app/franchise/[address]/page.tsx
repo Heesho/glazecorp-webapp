@@ -463,12 +463,16 @@ export default function RigDetailPage() {
                     <TokenIcon imageUrl={imageUrl} symbol={rig.symbol} size="md" />
                     <span>{rigState ? formatToken(rigState.ups) : "-"}/s</span>
                   </div>
+                  <div className="text-xs text-corp-500">
+                    ${rigState ? (Number(formatUnits(rigState.ups, 18)) * tokenPriceUsd).toFixed(4) : "0.0000"}/s
+                  </div>
                 </div>
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-corp-500 mb-0.5">Mine Price</div>
                   <div className="text-lg text-glaze-400 font-semibold tabular-nums">
                     Ξ{currentPriceEth.toFixed(5)}
                   </div>
+                  <div className="text-xs text-corp-500">${(currentPriceEth * ethPriceUsd).toFixed(2)}</div>
                 </div>
               </div>
               <Button
