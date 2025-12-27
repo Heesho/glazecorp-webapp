@@ -4,7 +4,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import { formatUnits, formatEther, type Address } from "viem";
 import { Lock, Unlock, RotateCcw, Clock } from "lucide-react";
 
-import { Card, Button, DonutLogo, GDonutLogo } from "@/components/ui";
+import { Card, Button, DonutLogo } from "@/components/ui";
 import { DONUT_DECIMALS } from "@/config/constants";
 import { useStaking } from "../hooks/useStaking";
 import { formatTimeUntilNextEpoch, canVoteThisEpoch, type VoterData } from "../hooks/useGovernData";
@@ -100,36 +100,6 @@ export function StakePanel({
 
   return (
     <div className="flex flex-col h-full gap-3 overflow-hidden">
-      {/* Balance Cards */}
-      <div className="grid grid-cols-2 gap-2 shrink-0">
-        <Card noPadding>
-          <div className="p-3">
-            <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
-              DONUT Balance
-            </div>
-            <div className="flex items-center gap-2">
-              <DonutLogo className="w-5 h-5" />
-              <span className="text-lg font-bold font-mono text-white">
-                {voterData ? formatTokenAmount(voterData.accountUnderlyingTokenBalance, DONUT_DECIMALS) : "-"}
-              </span>
-            </div>
-          </div>
-        </Card>
-        <Card noPadding>
-          <div className="p-3">
-            <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
-              gDONUT Balance
-            </div>
-            <div className="flex items-center gap-2">
-              <GDonutLogo className="w-5 h-5" />
-              <span className="text-lg font-bold font-mono text-white">
-                {voterData ? formatTokenAmount(voterData.accountGovernanceTokenBalance, DONUT_DECIMALS) : "-"}
-              </span>
-            </div>
-          </div>
-        </Card>
-      </div>
-
       {/* Stake/Unstake Toggle */}
       <div className="flex gap-2 shrink-0">
         <button
@@ -180,7 +150,8 @@ export function StakePanel({
                       : voterData.accountGovernanceTokenBalance,
                     DONUT_DECIMALS
                   )
-                : "0"}
+                : "0"}{" "}
+              {mode === "stake" ? "DONUT" : "gDONUT"}
             </button>
           </div>
           <div className="flex items-center gap-3 bg-black/40 border border-white/10 rounded px-3 py-2">

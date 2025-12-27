@@ -2,11 +2,10 @@
 
 import React, { useMemo } from "react";
 import { formatUnits, type Address } from "viem";
-import { Vote as VoteIcon, RotateCcw, Check } from "lucide-react";
+import { Vote as VoteIcon, RotateCcw } from "lucide-react";
 
-import { Card, Button, GDonutLogo, StrategyIcon } from "@/components/ui";
+import { Card, StrategyIcon } from "@/components/ui";
 import { PAYMENT_TOKEN_SYMBOLS, TOKEN_ADDRESSES } from "@/lib/blockchain/contracts";
-import { DONUT_DECIMALS } from "@/config/constants";
 import { useVoting } from "../hooks/useVoting";
 import {
   formatTimeUntilNextEpoch,
@@ -23,13 +22,21 @@ interface VotePanelProps {
   hasVotingPower: boolean;
   canVote: boolean;
   hasActiveVotes: boolean;
-  totalPendingRewards: { token: Address; decimals: number; amount: bigint }[];
-  allBribeAddresses: Address[];
   ethPrice: number;
   donutPriceInEth: bigint;
   lpPriceUsd: number;
   onSuccess: () => void;
 }
+
+// Pie chart colors - exported for consistency
+export const CHART_COLORS = [
+  "#ec4899", // pink (brand)
+  "#8b5cf6", // purple
+  "#3b82f6", // blue
+  "#10b981", // green
+  "#f59e0b", // amber
+  "#ef4444", // red
+];
 
 const formatTokenAmount = (value: bigint, decimals: number, maxFractionDigits = 2) => {
   if (value === 0n) return "0";
@@ -49,60 +56,6 @@ const getStrategyInfo = (paymentToken: Address): { action: string; destination: 
     destination: "DAO",
   };
 };
-
-// Pie chart colors
-const CHART_COLORS = [
-  "#ec4899", // pink (brand)
-  "#8b5cf6", // purple
-  "#3b82f6", // blue
-  "#10b981", // green
-  "#f59e0b", // amber
-  "#ef4444", // red
-];
-
-function DonutChart({ data }: { data: { label: string; value: number; color: string }[] }) {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-  const radius = 30;
-  const strokeWidth = 28;
-  const circumference = 2 * Math.PI * radius;
-
-  let currentOffset = circumference * 0.25; // Start from top
-
-  const segments = total > 0
-    ? data
-        .filter((d) => (d.value / total) * 100 >= 0.5)
-        .map((d, i) => {
-          const segmentLength = (d.value / total) * circumference;
-          const dashArray = `${segmentLength} ${circumference - segmentLength}`;
-          const dashOffset = currentOffset;
-          currentOffset -= segmentLength;
-
-          return (
-            <circle
-              key={i}
-              cx="50"
-              cy="50"
-              r={radius}
-              fill="none"
-              stroke={d.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={dashArray}
-              strokeDashoffset={dashOffset}
-              className="transition-all duration-300"
-            />
-          );
-        })
-    : null;
-
-  return (
-    <div className="w-24 h-24 mx-auto">
-      <svg viewBox="0 0 100 100" className="w-full h-full">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#18181b" strokeWidth={strokeWidth} />
-        {segments}
-      </svg>
-    </div>
-  );
-}
 
 // Get USD price for a token
 const getTokenUsdPrice = (
@@ -127,8 +80,6 @@ export function VotePanel({
   hasVotingPower,
   canVote,
   hasActiveVotes,
-  totalPendingRewards,
-  allBribeAddresses,
   ethPrice,
   donutPriceInEth,
   lpPriceUsd,
@@ -139,6 +90,7 @@ export function VotePanel({
     if (donutPriceInEth === 0n || ethPrice === 0) return 0;
     return Number(formatUnits(donutPriceInEth, 18)) * ethPrice;
   }, [donutPriceInEth, ethPrice]);
+
   const {
     txStep,
     txResult,
@@ -148,88 +100,16 @@ export function VotePanel({
     totalVoteWeight,
     handleVote,
     handleReset,
-    handleClaimBribes,
   } = useVoting(userAddress, onSuccess);
 
-  const hasPendingRewards = totalPendingRewards.length > 0;
-
-  // Prepare pie chart data from current vote distribution
-  const pieChartData = useMemo(() => {
-    return bribesData.map((bribe, i) => {
-      const strategyData = strategyDataMap.get(bribe.strategy.toLowerCase());
-      const info = strategyData ? getStrategyInfo(strategyData.paymentToken) : { action: "Unknown" };
-      const votePercent = Number(bribe.votePercent) / 1e18;
-
-      return {
-        label: info.action,
-        value: votePercent,
-        color: CHART_COLORS[i % CHART_COLORS.length],
-      };
-    });
-  }, [bribesData, strategyDataMap]);
-
   return (
-    <div className="flex flex-col h-full gap-3 overflow-hidden">
-      {/* Vote Distribution, Voting Power & Rewards Row */}
-      <div className="grid grid-cols-3 gap-2 shrink-0">
-        {/* Vote Distribution */}
-        <Card noPadding>
-          <div className="p-3 flex flex-col items-center justify-center h-full">
-            <DonutChart data={pieChartData} />
-          </div>
-        </Card>
-
-        {/* Voting Power */}
-        <Card noPadding>
-          <div className="p-3">
-            <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
-              Voting Power
-            </div>
-            <div className="flex items-center gap-2">
-              <GDonutLogo className="w-5 h-5" />
-              <span className="text-xl font-bold font-mono text-glaze-400">
-                {voterData
-                  ? formatTokenAmount(voterData.accountGovernanceTokenBalance, DONUT_DECIMALS)
-                  : "-"}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Pending Rewards */}
-        <Card noPadding>
-          <div className="p-3">
-            <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-1">
-              Rewards
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold font-mono text-white">
-                ${totalPendingRewards.reduce((sum, r) => {
-                  const amount = Number(formatUnits(r.amount, r.decimals));
-                  const price = getTokenUsdPrice(r.token, ethPrice, donutPriceUsd, lpPriceUsd);
-                  return sum + amount * price;
-                }, 0).toFixed(2)}
-              </span>
-              {hasPendingRewards && (
-                <button
-                  onClick={() => handleClaimBribes(allBribeAddresses)}
-                  disabled={isBusy}
-                  className="px-2 py-0.5 text-[9px] font-mono font-bold bg-glaze-500 hover:bg-glaze-600 disabled:opacity-50 text-white rounded"
-                >
-                  {txStep === "claiming" ? "..." : "CLAIM"}
-                </button>
-              )}
-            </div>
-          </div>
-        </Card>
-      </div>
-
+    <div className="flex flex-col gap-3">
       {/* Strategies List */}
-      <div className="flex-1 min-h-0 overflow-hidden">
-        <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest mb-2">
+      <div>
+        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">
           Strategies
         </div>
-        <div className="h-[calc(100%-20px)] overflow-y-auto custom-scrollbar space-y-2 pr-1">
+        <div className="space-y-2">
           {bribesData.length === 0 ? (
             <div className="flex items-center justify-center h-20">
               <div className="text-zinc-600 text-xs font-mono">Loading...</div>
@@ -355,78 +235,59 @@ export function VotePanel({
             })
           )}
         </div>
-
-        {/* Total Footer */}
-        {canVote && (
-          <div className="mt-2 px-3 py-2 bg-corp-900 border border-corp-700 rounded">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono text-zinc-500 uppercase">Total</span>
-              <span className={`text-sm font-bold font-mono ${
-                totalVoteWeight === 0 ? "text-zinc-500" :
-                totalVoteWeight === 100 ? "text-emerald-400" :
-                totalVoteWeight > 100 ? "text-red-400" : "text-glaze-400"
-              }`}>
-                {totalVoteWeight}%
-                {totalVoteWeight > 0 && totalVoteWeight !== 100 && (
-                  <span className="text-[9px] font-normal text-zinc-500 ml-1">
-                    ({totalVoteWeight < 100 ? `${100 - totalVoteWeight}% left` : "exceeds 100%"})
-                  </span>
-                )}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="space-y-2 shrink-0">
-        {!hasVotingPower ? (
-          <div className="bg-zinc-900 rounded p-3 text-center">
-            <div className="text-[10px] font-mono text-zinc-500">
-              Stake DONUT to get gDONUT voting power
-            </div>
-          </div>
-        ) : !canVote ? (
-          <Button
-            variant="secondary"
-            fullWidth
-            disabled
-            className="!py-3 !bg-yellow-500/10 !border-yellow-500/30"
-          >
-            <span className="text-yellow-400 text-xs font-mono">
-              Voted • Next in {voterData ? formatTimeUntilNextEpoch(voterData.accountLastVoted) : ""}
+      {/* Total Footer */}
+      {canVote && (
+        <div className="px-3 py-2 bg-corp-900 border border-corp-700 rounded">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-zinc-500 uppercase">Total</span>
+            <span className={`text-sm font-bold font-mono ${
+              totalVoteWeight === 0 ? "text-zinc-500" :
+              totalVoteWeight === 100 ? "text-emerald-400" :
+              totalVoteWeight > 100 ? "text-red-400" : "text-glaze-400"
+            }`}>
+              {totalVoteWeight}%
+              {totalVoteWeight > 0 && totalVoteWeight !== 100 && (
+                <span className="text-[9px] font-normal text-zinc-500 ml-1">
+                  ({totalVoteWeight < 100 ? `${100 - totalVoteWeight}% left` : "exceeds 100%"})
+                </span>
+              )}
             </span>
-          </Button>
-        ) : (
-          <>
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={handleVote}
-              disabled={isBusy || totalVoteWeight === 0 || totalVoteWeight > 100}
-              className="!py-3"
-            >
-              <VoteIcon size={14} className="mr-2" />
-              {txResult === "success" ? "SUCCESS!" :
-               txResult === "failure" ? "FAILED" :
-               txStep === "voting" ? "VOTING..." :
-               totalVoteWeight === 0 ? "ENTER % TO VOTE" :
-               totalVoteWeight > 100 ? "TOTAL EXCEEDS 100%" :
-               totalVoteWeight < 100 ? `VOTE (${totalVoteWeight}%)` : "VOTE"}
-            </Button>
-            {hasActiveVotes && (
-              <Button
-                variant="secondary"
-                fullWidth
-                onClick={handleReset}
-                disabled={isBusy}
-                className="!py-2"
-              >
-                <RotateCcw size={12} className="mr-2" />
-                {txStep === "resetting" ? "RESETTING..." : "RESET VOTES"}
-              </Button>
-            )}
-          </>
+          </div>
+        </div>
+      )}
+
+      {/* Vote Button */}
+      <div className="space-y-2">
+        <button
+          onClick={handleVote}
+          disabled={!hasVotingPower || !canVote || isBusy || totalVoteWeight === 0 || totalVoteWeight > 100}
+          className={`w-full py-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+            hasVotingPower && canVote && totalVoteWeight > 0 && totalVoteWeight <= 100 && !isBusy
+              ? "bg-glaze-500 text-white hover:bg-glaze-400"
+              : "bg-glaze-500/30 text-glaze-300/60 cursor-not-allowed"
+          }`}
+        >
+          <VoteIcon size={14} />
+          {txResult === "success" ? "SUCCESS!" :
+           txResult === "failure" ? "FAILED" :
+           txStep === "voting" ? "VOTING..." :
+           !hasVotingPower ? "STAKE TO VOTE" :
+           !canVote ? `VOTED • NEXT ${voterData ? formatTimeUntilNextEpoch(voterData.accountLastVoted) : ""}` :
+           totalVoteWeight === 0 ? "ENTER % TO VOTE" :
+           totalVoteWeight > 100 ? "TOTAL EXCEEDS 100%" :
+           totalVoteWeight < 100 ? `VOTE (${totalVoteWeight}%)` : "VOTE"}
+        </button>
+        {hasActiveVotes && canVote && (
+          <button
+            onClick={handleReset}
+            disabled={isBusy}
+            className="w-full py-2 rounded-lg font-semibold text-xs transition-all flex items-center justify-center gap-2 bg-corp-800 text-corp-400 hover:text-corp-50 border border-corp-700"
+          >
+            <RotateCcw size={12} />
+            {txStep === "resetting" ? "RESETTING..." : "RESET VOTES"}
+          </button>
         )}
       </div>
     </div>

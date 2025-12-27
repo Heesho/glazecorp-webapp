@@ -186,7 +186,7 @@ export function useStaking(
           address: TOKEN_ADDRESSES.donut as Address,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [LSG_ADDRESSES.governanceToken as Address, parsedAmount * 2n],
+          args: [LSG_ADDRESSES.governanceToken as Address, parsedAmount],
           chainId: base.id,
         });
       } catch (error) {
@@ -235,7 +235,7 @@ export function useStaking(
           address: TOKEN_ADDRESSES.donut as Address,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [LSG_ADDRESSES.governanceToken as Address, parsedAmount * 2n],
+          args: [LSG_ADDRESSES.governanceToken as Address, parsedAmount],
           chainId: base.id,
         });
       } catch (error) {
