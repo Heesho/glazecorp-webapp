@@ -8,6 +8,7 @@ import {
   Vote,
   Store,
   Gavel,
+  Workflow,
 } from "lucide-react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 
@@ -17,6 +18,7 @@ const NAV_ITEMS = [
   { href: "/govern", icon: Vote, label: "Vote" },
   { href: "/franchise", icon: Store, label: "Franchise" },
   { href: "/auctions", icon: Gavel, label: "Auction" },
+  { href: "/system", icon: Workflow, label: "System" },
 ];
 
 export function Header() {

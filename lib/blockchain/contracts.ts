@@ -18,7 +18,7 @@ export const LSG_ADDRESSES = {
   governanceToken: "0xC78B6e362cB0f48b59E573dfe7C99d92153a16d3", // gDONUT
   voter: "0x9C5Cf3246d7142cdAeBBD5f653d95ACB73DdabA6",
   revenueRouter: "0x4799CBe9782265C0633d24c7311dD029090dED33",
-  lsgMulticall: "0x19ceD08B532f81AfcF6c030F6eB53334105075F9",
+  lsgMulticall: "0x41eA22dF0174cF3Cc09B1469a95D604E1833a462",
 } as const;
 
 // Payment token symbols for display
@@ -89,6 +89,77 @@ export const MINER_ABI = [
 
 // LSG Multicall ABI
 export const LSG_MULTICALL_ABI = [
+  {
+    inputs: [],
+    name: "getSystemOverview",
+    outputs: [
+      {
+        components: [
+          { name: "revenueRouter", type: "address" },
+          { name: "revenueRouterWethBalance", type: "uint256" },
+          { name: "voterAddress", type: "address" },
+          { name: "voterTotalClaimable", type: "uint256" },
+          { name: "totalWeight", type: "uint256" },
+          { name: "bribeSplit", type: "uint256" },
+          { name: "governanceToken", type: "address" },
+          { name: "governanceTokenTotalSupply", type: "uint256" },
+          { name: "underlyingToken", type: "address" },
+          { name: "underlyingTokenDecimals", type: "uint8" },
+          { name: "underlyingTokenSymbol", type: "string" },
+          { name: "currentEpochStart", type: "uint256" },
+          { name: "nextEpochStart", type: "uint256" },
+          { name: "timeUntilNextEpoch", type: "uint256" },
+          { name: "epochDuration", type: "uint256" },
+          { name: "strategyCount", type: "uint256" },
+        ],
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getAllStrategyOverviews",
+    outputs: [
+      {
+        components: [
+          { name: "strategy", type: "address" },
+          { name: "bribe", type: "address" },
+          { name: "bribeRouter", type: "address" },
+          { name: "paymentToken", type: "address" },
+          { name: "paymentTokenSymbol", type: "string" },
+          { name: "paymentTokenDecimals", type: "uint8" },
+          { name: "isAlive", type: "bool" },
+          { name: "strategyWethBalance", type: "uint256" },
+          { name: "strategyClaimable", type: "uint256" },
+          { name: "strategyPendingRevenue", type: "uint256" },
+          { name: "strategyTotalPotentialWeth", type: "uint256" },
+          { name: "bribeRouterTokenBalance", type: "uint256" },
+          { name: "bribeTokensLeft", type: "uint256" },
+          { name: "bribeTotalSupply", type: "uint256" },
+          { name: "strategyWeight", type: "uint256" },
+          { name: "votePercent", type: "uint256" },
+          { name: "epochId", type: "uint256" },
+          { name: "epochPeriod", type: "uint256" },
+          { name: "startTime", type: "uint256" },
+          { name: "initPrice", type: "uint256" },
+          { name: "currentPrice", type: "uint256" },
+          { name: "timeUntilAuctionEnd", type: "uint256" },
+        ],
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "flushAndDistributeAll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
   {
     inputs: [{ name: "account", type: "address" }],
     name: "getVoterData",
