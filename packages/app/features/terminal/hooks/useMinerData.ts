@@ -61,12 +61,19 @@ export function useMinerData(
   // Poll the contract state separately so the mine quote can refresh aggressively.
   useEffect(() => {
     let cancelled = false;
+    let stateRequestInFlight = false;
 
     const refreshState = async () => {
+      if (stateRequestInFlight) return;
+      stateRequestInFlight = true;
       const addr = userAddress ?? ZERO_ADDRESS;
-      const state = await fetchMinerState(addr);
-      if (!cancelled && state) {
-        setMinerState(state);
+      try {
+        const state = await fetchMinerState(addr);
+        if (!cancelled && state) {
+          setMinerState(state);
+        }
+      } finally {
+        stateRequestInFlight = false;
       }
     };
 

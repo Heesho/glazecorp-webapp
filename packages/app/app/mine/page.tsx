@@ -125,8 +125,12 @@ export default function MinePage() {
     statePollingIntervalMs: MINER_QUOTE_POLLING_INTERVAL_MS,
   });
 
-  const { now, halvingDisplay } = usePriceTicker(nextHalvingTime);
-  const quotePrice = minerState.price ?? 0n;
+  const { currentPrice, now, halvingDisplay } = usePriceTicker(
+    minerState.initPrice,
+    minerState.startTime,
+    nextHalvingTime
+  );
+  const quotePrice = currentPrice > 0n ? currentPrice : (minerState.price ?? 0n);
 
   const syncMinerState = useCallback(
     (newState: typeof minerState) => setMinerState(newState),
@@ -134,7 +138,7 @@ export default function MinePage() {
   );
 
   const { isGlazing, connectionError, message, setMessage, handleGlaze } =
-    useGlaze(address, walletClient, minerState, quotePrice, syncMinerState);
+    useGlaze(address, walletClient, minerState, syncMinerState);
 
   // Derived values
   const donutPerSecond = useMemo(() => {

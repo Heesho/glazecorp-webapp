@@ -23,7 +23,6 @@ export function useGlaze(
   userAddress: string | undefined,
   walletClient: WalletClient | undefined | null,
   minerState: MinerState,
-  displayedPrice: bigint,
   syncMinerState: (newState: MinerState) => void
 ): UseGlazeReturn {
   const [isGlazing, setIsGlazing] = useState(false);
@@ -50,22 +49,14 @@ export function useGlaze(
         throw new Error("Unable to fetch the latest mine price");
       }
 
-      const quoteChanged =
+      const stateChanged =
         freshState.epochId !== minerState.epochId ||
         freshState.startTime !== minerState.startTime ||
         freshState.initPrice !== minerState.initPrice ||
-        freshState.price !== displayedPrice;
+        freshState.price !== minerState.price;
 
-      if (quoteChanged) {
-        console.info("Mine quote updated before submit", {
-          displayedEpochId: minerState.epochId,
-          latestEpochId: freshState.epochId,
-          displayedPrice: displayedPrice.toString(),
-          latestPrice: freshState.price.toString(),
-        });
+      if (stateChanged) {
         syncMinerState(freshState);
-        setConnectionError("Mine price updated. Review the new quote and tap Mine again.");
-        return;
       }
 
       const freshPrice = freshState.price;
@@ -118,8 +109,8 @@ export function useGlaze(
     walletClient,
     minerState.epochId,
     minerState.initPrice,
+    minerState.price,
     minerState.startTime,
-    displayedPrice,
     message,
     syncMinerState,
   ]);
