@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useMinerData, usePriceTicker, useGlaze } from "@/features/terminal";
 import { formatEth, formatDonut } from "@/lib/miner/format";
 import { truncateAddress, timeAgo } from "@/lib/format";
+import { getFarcasterConnector } from "@/lib/farcaster-wallet";
 import type { FarcasterProfile, FeedItem } from "@/types/miner";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -197,7 +198,7 @@ export default function MinePage() {
 
   const handleConnect = async () => {
     const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = connectors.find((c) => c.id === "farcasterMiniApp");
+    const farcaster = getFarcasterConnector(connectors);
     const connector = farcaster || injected;
     if (connector) {
       try {

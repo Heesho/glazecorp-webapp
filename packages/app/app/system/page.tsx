@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { useSystemData, useFlushAndDistribute } from "@/features/system";
 import { PAYMENT_TOKEN_SYMBOLS, TOKEN_ADDRESSES } from "@/config/govern-constants";
+import { getFarcasterConnector } from "@/lib/farcaster-wallet";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -181,7 +182,7 @@ export default function SystemPage() {
 
   const handleConnect = async () => {
     const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = connectors.find((c) => c.id === "farcasterMiniApp");
+    const farcaster = getFarcasterConnector(connectors);
     const connector = farcaster || injected;
     if (connector) {
       try {

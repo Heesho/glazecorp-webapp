@@ -1,11 +1,12 @@
 "use client";
 
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { WagmiProvider, useAccount, useChainId, useSwitchChain } from "wagmi";
+import { WagmiProvider, useAccount, useChainId, useConnect, useSwitchChain } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { wagmiConfig } from "@/lib/wagmi";
 import { DEFAULT_CHAIN_ID } from "@/lib/constants";
+import { FARCASTER_AUTO_CONNECT_KEY, getFarcasterConnector } from "@/lib/farcaster-wallet";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -46,6 +47,10 @@ function NetworkGuard({ children }: { children: ReactNode }) {
 
 function AutoConnect() {
   const readyRef = useRef(false);
+  const [isInFrame, setIsInFrame] = useState<boolean | null>(null);
+  const { isConnected } = useAccount();
+  const { connectors, connectAsync, isPending: isConnecting } = useConnect();
+  const farcasterConnector = getFarcasterConnector(connectors);
 
   useEffect(() => {
     if (!readyRef.current) {
@@ -53,6 +58,51 @@ function AutoConnect() {
       sdk.actions.ready().catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const detectMiniApp = async () => {
+      try {
+        const ctx = (await (sdk as unknown as {
+          context: Promise<{ user?: { fid?: number } }>;
+        }).context) ?? null;
+
+        if (!cancelled) {
+          setIsInFrame(!!ctx?.user?.fid);
+        }
+      } catch {
+        if (!cancelled) {
+          setIsInFrame(false);
+        }
+      }
+    };
+
+    detectMiniApp();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isInFrame !== true || isConnected || isConnecting || !farcasterConnector) {
+      return;
+    }
+
+    const alreadyAttempted =
+      typeof window !== "undefined" && sessionStorage.getItem(FARCASTER_AUTO_CONNECT_KEY);
+    if (alreadyAttempted) return;
+
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(FARCASTER_AUTO_CONNECT_KEY, "true");
+    }
+
+    connectAsync({
+      connector: farcasterConnector,
+      chainId: DEFAULT_CHAIN_ID,
+    }).catch(() => {});
+  }, [connectAsync, farcasterConnector, isConnected, isConnecting, isInFrame]);
 
   return null;
 }

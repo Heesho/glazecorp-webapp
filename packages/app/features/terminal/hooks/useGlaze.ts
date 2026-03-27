@@ -31,23 +31,45 @@ export function useGlaze(
   const [message, setMessage] = useState("");
 
   const handleGlaze = useCallback(async () => {
-    if (!userAddress || !walletClient) return;
+    if (!userAddress || !walletClient?.account) return;
 
     setIsGlazing(true);
     setConnectionError(null);
 
     try {
-      const epochId = BigInt(minerState.epochId);
-      const deadline = BigInt(Math.floor(Date.now() / 1000) + 300);
-      const priceVal = BigInt(currentPrice);
-      const valueToSend = priceVal + priceVal / 10n;
+      const signerAddress = walletClient.account.address as Address;
+      if (userAddress.toLowerCase() !== signerAddress.toLowerCase()) {
+        console.warn("Mine address mismatch; using signer address for provider", {
+          userAddress,
+          signerAddress,
+        });
+      }
+
+      const freshState = await fetchMinerState(signerAddress);
+      if (!freshState) {
+        throw new Error("Unable to fetch the latest mine price");
+      }
+
+      const freshPrice = freshState.price;
+      if (freshState.epochId !== minerState.epochId || freshPrice !== currentPrice) {
+        console.info("Mine quote refreshed before submit", {
+          displayedEpochId: minerState.epochId,
+          latestEpochId: freshState.epochId,
+          displayedPrice: currentPrice.toString(),
+          latestPrice: freshPrice.toString(),
+        });
+      }
+
+      const epochId = BigInt(freshState.epochId);
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 60);
+      const valueToSend = freshPrice;
       const uri = message.trim() || "We Glaze The World - GlazeCorp.io";
 
       const data = encodeFunctionData({
         abi: MINER_MULTICALL_ABI,
         functionName: "mine",
         args: [
-          userAddress as Address,
+          signerAddress,
           epochId,
           deadline,
           valueToSend,
@@ -60,19 +82,24 @@ export function useGlaze(
         data,
         value: valueToSend,
         chain: walletClient.chain,
-        account: walletClient.account!,
+        account: walletClient.account,
       });
 
       await waitForTransactionReceipt(wagmiConfig, { hash });
       setMessage("");
 
-      const state = await fetchMinerState(userAddress);
+      const state = await fetchMinerState(signerAddress);
       if (state) onSuccess(state);
-    } catch (e: any) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
+      const txError = error as {
+        shortMessage?: string;
+        reason?: string;
+        message?: string;
+      };
       setConnectionError(
         "Transaction Failed: " +
-          (e.shortMessage || e.reason || e.message || "Unknown error")
+          (txError.shortMessage || txError.reason || txError.message || "Unknown error")
       );
     } finally {
       setIsGlazing(false);

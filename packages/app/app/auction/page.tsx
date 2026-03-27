@@ -12,6 +12,7 @@ import {
   TOKEN_ADDRESSES,
   POLLING_INTERVAL_MS,
 } from "@/config/govern-constants";
+import { getFarcasterConnector } from "@/lib/farcaster-wallet";
 import { MINER_MULTICALL_ADDRESS, MINER_MULTICALL_ABI } from "@/config/miner-constants";
 
 // ─── constants ──────────────────────────────────────────────────────────────
@@ -382,7 +383,7 @@ export default function AuctionPage() {
 
   const handleConnect = async () => {
     const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = connectors.find((c) => c.id === "farcasterMiniApp");
+    const farcaster = getFarcasterConnector(connectors);
     const connector = farcaster || injected;
     if (connector) {
       try {
