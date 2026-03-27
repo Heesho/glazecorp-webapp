@@ -27,7 +27,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="relative h-screen h-[100svh] h-[100dvh] w-full overflow-hidden">
+    <main className="relative h-screen w-full overflow-hidden">
       {/* Video background */}
       <video
         autoPlay
@@ -43,7 +43,7 @@ export default function LandingPage() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
 
       {/* Hero content */}
-      <div className="relative z-10 flex h-full flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 pb-[calc(env(safe-area-inset-bottom,0px)+104px)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+112px)] lg:pb-24 max-w-[1400px] mx-auto">
+      <div className="relative z-10 flex h-full flex-col items-start justify-end pb-16 sm:pb-20 md:pb-24 px-4 sm:px-6 md:px-10 lg:px-16 max-w-[1400px] mx-auto">
         {/* Logo + tagline */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
