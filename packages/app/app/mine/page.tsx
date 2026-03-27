@@ -99,6 +99,20 @@ function ProfileAvatar({
   );
 }
 
+function DonutMark({ size = 12 }: { size?: number }) {
+  return (
+    <span
+      aria-hidden
+      className="inline-block shrink-0 rounded-full border-solid border-primary"
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderWidth: `${Math.round(size * 0.29 * 10) / 10}px`,
+      }}
+    />
+  );
+}
+
 // ─── main page ──────────────────────────────────────────────────────────────
 
 export default function MinePage() {
@@ -257,7 +271,7 @@ export default function MinePage() {
                 <span className="text-xs text-muted-foreground">Mined</span>
                 <div className="text-right">
                   <div className="text-sm font-medium inline-flex items-center justify-end gap-1 leading-none">
-                    <span>+</span><span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" /><span>{accruedDonutsStr}</span>
+                    <span>+</span><DonutMark size={12} /><span>{accruedDonutsStr}</span>
                   </div>
                   <div className="text-[11px] text-muted-foreground">+${accruedValueUsd}</div>
                 </div>
@@ -287,7 +301,7 @@ export default function MinePage() {
                 <div>
                   <div className="text-[11px] text-muted-foreground mb-0.5">Rate</div>
                   <div className="text-lg font-semibold flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded-full border-[3.5px] border-primary shrink-0" />
+                    <DonutMark size={14} />
                     <span className="font-mono tabular-nums">{donutPerSecond}/s</span>
                   </div>
                 </div>
@@ -320,7 +334,7 @@ export default function MinePage() {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">DONUT</span>
                   <span className="text-sm font-medium inline-flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                    <DonutMark size={12} />
                     {formatDonut(minerState.donutBalance)}
                   </span>
                 </div>
@@ -340,7 +354,7 @@ export default function MinePage() {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">DONUT Mined</span>
                   <span className="text-sm font-medium inline-flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                    <DonutMark size={12} />
                     {userGraphStats ? formatGraphDonut(userGraphStats.mined) : "0"}
                   </span>
                 </div>
@@ -356,7 +370,7 @@ export default function MinePage() {
               <div className="flex justify-between items-center">
                 <span className="text-xs text-muted-foreground">Total Mined</span>
                 <span className="text-sm font-medium inline-flex items-center gap-1">
-                  <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                  <DonutMark size={12} />
                   {totalMined}
                 </span>
               </div>
@@ -401,7 +415,7 @@ export default function MinePage() {
                       <div className="text-right shrink-0">
                         <div className="text-[12px] text-muted-foreground">Mined</div>
                         <div className="text-[13px] font-medium font-mono tabular-nums inline-flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full border-[2px] border-primary shrink-0" />
+                          <DonutMark size={8} />
                           {isLive ? accruedDonutsStr : (item.mined ? parseFloat(item.mined).toLocaleString() : "0")}
                         </div>
                       </div>
@@ -451,7 +465,7 @@ export default function MinePage() {
                   <span className="text-xs text-muted-foreground">Mined</span>
                   <div className="text-right">
                     <div className="text-sm font-medium inline-flex items-center justify-end gap-1 leading-none">
-                      <span>+</span><span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" /><span>{accruedDonutsStr}</span>
+                      <span>+</span><DonutMark size={12} /><span>{accruedDonutsStr}</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground">+${accruedValueUsd}</div>
                   </div>
@@ -483,7 +497,7 @@ export default function MinePage() {
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-muted-foreground">Total Mined</span>
                   <span className="text-sm font-medium inline-flex items-center gap-1">
-                    <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                    <DonutMark size={12} />
                     {totalMined}
                   </span>
                 </div>
@@ -511,7 +525,7 @@ export default function MinePage() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">DONUT</span>
                     <span className="text-sm font-medium inline-flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                      <DonutMark size={12} />
                       {formatDonut(minerState.donutBalance)}
                     </span>
                   </div>
@@ -532,7 +546,7 @@ export default function MinePage() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">DONUT Mined</span>
                     <span className="text-sm font-medium inline-flex items-center gap-1">
-                      <span className="w-3 h-3 rounded-full border-[3.5px] border-primary shrink-0" />
+                      <DonutMark size={12} />
                       {userGraphStats ? formatGraphDonut(userGraphStats.mined) : "0"}
                     </span>
                   </div>
@@ -567,7 +581,7 @@ export default function MinePage() {
                   <div>
                     <div className="text-[11px] text-muted-foreground mb-0.5">Rate</div>
                     <div className="text-lg font-semibold flex items-center gap-1.5">
-                      <span className="w-3.5 h-3.5 rounded-full border-[3.5px] border-primary shrink-0" />
+                      <DonutMark size={14} />
                       <span className="font-mono tabular-nums">{donutPerSecond}/s</span>
                     </div>
                     {ethPrice > 0 && (
@@ -693,7 +707,7 @@ export default function MinePage() {
                             </td>
                             <td className="py-3 text-sm text-right tabular-nums font-mono pr-2">
                               <span className="inline-flex items-center justify-end gap-1">
-                                <span className="w-2.5 h-2.5 rounded-full border-[3px] border-primary shrink-0" />
+                                <DonutMark size={10} />
                                 {isLive ? liveMined : (item.mined ? parseFloat(item.mined).toLocaleString() : "0")}
                               </span>
                             </td>
