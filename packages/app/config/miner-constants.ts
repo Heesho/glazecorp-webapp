@@ -1,6 +1,6 @@
 // Timing
 export const POLLING_INTERVAL_MS = 15000; // 15 seconds for slower-moving supporting data
-export const MINER_QUOTE_POLLING_INTERVAL_MS = 1000; // Fast quote refresh without piling up requests
+export const MINER_QUOTE_POLLING_INTERVAL_MS = 500; // Fast quote refresh without piling up requests
 export const TICKER_INTERVAL_MS = 100;
 
 // Halving

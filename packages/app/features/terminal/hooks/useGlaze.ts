@@ -44,25 +44,14 @@ export function useGlaze(
         });
       }
 
-      const freshState = await fetchMinerState(signerAddress);
-      if (!freshState) {
+      const displayedPrice = minerState.price;
+      if (displayedPrice <= 0n) {
         throw new Error("Unable to fetch the latest mine price");
       }
 
-      const stateChanged =
-        freshState.epochId !== minerState.epochId ||
-        freshState.startTime !== minerState.startTime ||
-        freshState.initPrice !== minerState.initPrice ||
-        freshState.price !== minerState.price;
-
-      if (stateChanged) {
-        syncMinerState(freshState);
-      }
-
-      const freshPrice = freshState.price;
-      const epochId = BigInt(freshState.epochId);
+      const epochId = BigInt(minerState.epochId);
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60);
-      const valueToSend = freshPrice;
+      const valueToSend = displayedPrice;
       const uri = message.trim() || "We Glaze The World - GlazeCorp.io";
 
       const data = encodeFunctionData({
