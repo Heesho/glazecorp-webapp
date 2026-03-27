@@ -51,7 +51,7 @@ export default function LandingPage() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
           className="flex flex-col gap-3 sm:gap-4"
         >
-          <div className="max-w-[500px] flex items-end">
+          <div className="max-w-[90vw] sm:max-w-[500px] flex items-end">
             <AnimatePresence mode="wait">
               <motion.p
                 key={blurbIndex}
@@ -59,7 +59,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.1] tracking-[-0.02em] text-white"
+                className="text-[1.5rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.25rem] font-bold leading-[1.1] tracking-[-0.02em] text-white"
               >
                 {blurbs[blurbIndex]}
               </motion.p>
@@ -67,10 +67,10 @@ export default function LandingPage() {
           </div>
 
           {/* CTA buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={handleEnter}
-              className="btn-liquid-glass inline-flex items-center justify-center w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+              className="btn-liquid-glass inline-flex items-center justify-center w-[100px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
             >
               Enter App
             </button>
@@ -78,18 +78,18 @@ export default function LandingPage() {
               href="https://give.fun"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-liquid-glass inline-flex items-center justify-center gap-2 w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+              className="btn-liquid-glass inline-flex items-center justify-center gap-1.5 sm:gap-2 w-[110px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
             >
-              <img src="/media/givefun-logo.png" alt="give.fun" className="h-8 w-8 object-contain" />
+              <img src="/media/givefun-logo.png" alt="give.fun" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
               give.fun
             </a>
             <a
               href="https://stickr.net"
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-liquid-glass inline-flex items-center justify-center gap-2 w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+              className="btn-liquid-glass inline-flex items-center justify-center gap-1.5 sm:gap-2 w-[110px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
             >
-              <img src="/media/stickr-logo.png" alt="stickr.net" className="h-8 w-8 object-contain" />
+              <img src="/media/stickr-logo.png" alt="stickr.net" className="h-6 w-6 sm:h-8 sm:w-8 object-contain" />
               stickr.net
             </a>
           </div>

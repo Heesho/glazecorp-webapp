@@ -207,7 +207,7 @@ export function GlobalNav() {
                     type="button"
                     onClick={() => {
                       setMenuOpen(false);
-                      router.push(href);
+                      router.push(href as any);
                     }}
                     className={`block text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black transition-colors touch-manipulation ${
                       pathname === href ? "text-primary" : "hover:text-primary"
