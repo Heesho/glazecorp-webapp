@@ -32,9 +32,9 @@
     --popover: var(--surface);
     --popover-foreground: var(--foreground);
 
-    --primary: 142 72% 59%;
-    --primary-foreground: 135 56% 9%;
-    --primary-container: 136 38% 17%;
+    --primary: 330 80% 65%;
+    --primary-foreground: 330 56% 9%;
+    --primary-container: 330 38% 17%;
 
     --secondary: var(--surface-container-low);
     --secondary-foreground: var(--foreground);

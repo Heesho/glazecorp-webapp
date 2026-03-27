@@ -12,6 +12,18 @@ const resolveNobleHashes = () => {
 };
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { hostname: "imagedelivery.net" },
+      { hostname: "i.imgur.com" },
+      { hostname: "*.cloudfront.net" },
+      { hostname: "res.cloudinary.com" },
+      { hostname: "lh3.googleusercontent.com" },
+      { hostname: "pbs.twimg.com" },
+      { hostname: "**.ipfs.w3s.link" },
+      { hostname: "gateway.pinata.cloud" },
+    ],
+  },
   reactStrictMode: true,
   typedRoutes: true,
   outputFileTracingRoot: path.resolve(process.cwd(), "../.."),

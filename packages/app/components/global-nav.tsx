@@ -7,20 +7,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 
 const menuItems = [
-  { href: "/explore", label: "Explore" },
-  { href: "/launch", label: "Launch" },
+  { href: "/mine", label: "Mine" },
+  { href: "/vote", label: "Vote" },
+  { href: "/auction", label: "Auction" },
   { href: "/info", label: "About" },
-  { href: "/profile", label: "Profile" },
 ] as const;
 
 // Map pathname to display name for mobile header
 function getPageName(pathname: string): string | null {
   if (pathname === "/explore") return "Explore";
+  if (pathname === "/mine") return "Mine";
+  if (pathname === "/vote") return "Vote";
+  if (pathname === "/auction") return "Auction";
   if (pathname === "/launch") return "Launch";
   if (pathname === "/info") return "About";
   if (pathname === "/profile") return "Profile";
-  if (pathname.startsWith("/fundraiser/")) return null; // fundraiser injects its own title
-  if (pathname === "/auctions") return "Auctions";
+  if (pathname.startsWith("/fundraiser/")) return null;
   return null;
 }
 
@@ -81,7 +83,7 @@ export function GlobalNav() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="hover:opacity-80 transition-opacity">
               <img
                 src="/media/logo-transparent.png"
-                alt="give.fun"
+                alt="GlazeCorp"
                 className="h-7 w-7 object-contain"
               />
             </Link>
@@ -107,7 +109,7 @@ export function GlobalNav() {
               className="absolute left-1/2 -translate-x-1/2 font-bold text-[17px] tracking-[-0.02em] text-white"
               style={{ fontFamily: '"Metropolis", sans-serif' }}
             >
-              give.fun
+              GlazeCorp
             </span>
           )}
 
@@ -143,7 +145,7 @@ export function GlobalNav() {
             <Link href="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
               <img
                 src="/media/logo-transparent.png"
-                alt="give.fun"
+                alt="GlazeCorp"
                 className="h-12 w-12 object-contain"
               />
               <span
@@ -152,7 +154,7 @@ export function GlobalNav() {
                 }`}
                 style={{ fontFamily: '"Metropolis", sans-serif' }}
               >
-                give.fun
+                GlazeCorp
               </span>
             </Link>
           </div>

@@ -26,7 +26,7 @@ const miniAppEmbed = {
     title: "Start funding",
     action: {
       type: "launch_miniapp" as const,
-      name: "give.fun",
+      name: "GlazeCorp",
       url: appDomain,
       splashImageUrl,
       splashBackgroundColor: "#000000",
@@ -35,11 +35,11 @@ const miniAppEmbed = {
 };
 
 export const metadata: Metadata = {
-  title: "give.fun",
-  description: "A crypto GoFundMe on Base. Create fundraisers, fund with USDC, mine coins.",
+  title: "GlazeCorp",
+  description: "Mine donuts, earn yield, and glaze the world one block at a time.",
   openGraph: {
-    title: "give.fun",
-    description: "A crypto GoFundMe on Base. Create fundraisers, fund with USDC, mine coins.",
+    title: "GlazeCorp",
+    description: "Mine donuts, earn yield, and glaze the world one block at a time.",
     url: appDomain,
     images: [
       {

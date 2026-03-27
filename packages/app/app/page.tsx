@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const blurbs = [
-  "Fund the things you believe in and mine tokens as proof of conviction.",
-  "A crypto GoFundMe where every dollar mines a coin on Base.",
-  "Back builders, fund causes, and let capital become signal.",
-  "Put your money where your values are. Mine the proof.",
+  "We Glaze The World.",
+  "They say perfection isn't possible. Maybe they just didn't have enough glaze.",
+  "Machines don't get tired. They don't forget. They just keep getting better.",
+  "Perfection isn't a dream anymore. It's a system.",
 ] as const;
 
 export default function LandingPage() {
@@ -51,7 +51,7 @@ export default function LandingPage() {
           transition={{ duration: 1, ease: [0.16, 1, 0.3, 1], delay: 0.5 }}
           className="flex flex-col gap-3 sm:gap-4"
         >
-          <div className="min-h-[140px] sm:min-h-[180px] md:min-h-[200px] max-w-[500px]">
+          <div className="max-w-[500px] flex items-end">
             <AnimatePresence mode="wait">
               <motion.p
                 key={blurbIndex}
@@ -66,13 +66,33 @@ export default function LandingPage() {
             </AnimatePresence>
           </div>
 
-          {/* CTA button — opens nav menu */}
-          <button
-            onClick={handleEnter}
-            className="btn-liquid-glass inline-flex items-center justify-center px-8 py-3.5 text-[12px] font-semibold tracking-[0.02em] text-white w-fit"
-          >
-            Enter App
-          </button>
+          {/* CTA buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleEnter}
+              className="btn-liquid-glass inline-flex items-center justify-center w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+            >
+              Enter App
+            </button>
+            <a
+              href="https://give.fun"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-liquid-glass inline-flex items-center justify-center gap-2 w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+            >
+              <img src="/media/givefun-logo.png" alt="give.fun" className="h-8 w-8 object-contain" />
+              give.fun
+            </a>
+            <a
+              href="https://stickr.net"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-liquid-glass inline-flex items-center justify-center gap-2 w-[140px] h-[48px] text-[12px] font-semibold tracking-[0.02em] text-white"
+            >
+              <img src="/media/stickr-logo.png" alt="stickr.net" className="h-8 w-8 object-contain" />
+              stickr.net
+            </a>
+          </div>
         </motion.div>
       </div>
     </main>

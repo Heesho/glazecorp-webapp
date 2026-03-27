@@ -35,8 +35,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
     <div
       style={{
         opacity: visible ? 1 : 0,
-        marginTop: visible ? 0 : 40,
-        transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), margin-top 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
+        transition: "opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
       {children}

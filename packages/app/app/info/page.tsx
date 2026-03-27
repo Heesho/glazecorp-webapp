@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 const INFO_SECTIONS = [
   {
-    title: "What is give.fun?",
+    title: "What is GlazeCorp?",
     content:
       "A perpetual funding platform on Base. Create fundraisers for creators, public goods, agents, charities, or anything at all. Supporters fund with USDC and mine Karma Coins — like Bitcoin mining, but for things you care about.",
     bullets: [
@@ -84,7 +84,7 @@ export default function InfoPage() {
         <div className="page-header pt-2 lg:pt-[88px]">
           <div className="mx-auto w-full">
             <h1 className="page-title hidden lg:block">About</h1>
-            <p className="page-subtitle hidden lg:block">How give.fun works and why it matters.</p>
+            <p className="page-subtitle hidden lg:block">How GlazeCorp works and why it matters.</p>
           </div>
         </div>
 

@@ -112,11 +112,11 @@ export function NavBar({
             <Link href="/" className="flex shrink-0 items-center gap-2 transition-opacity hover:opacity-80">
               <img
                 src="/media/logo-transparent.png"
-                alt="give.fun"
+                alt="GlazeCorp"
                 className="h-9 w-9 object-contain"
               />
               <div className="font-display text-[17px] font-semibold tracking-[-0.03em] text-primary">
-                give.fun
+                GlazeCorp
               </div>
             </Link>
 
@@ -276,15 +276,15 @@ export function NavBar({
                   <div className="flex items-center gap-2">
                     <img
                       src="/media/logo-transparent.png"
-                      alt="give.fun"
+                      alt="GlazeCorp"
                       className="h-8 w-8 object-contain"
                     />
                     <div className="font-display text-[16px] font-semibold tracking-[-0.03em] text-primary">
-                      give.fun
+                      GlazeCorp
                     </div>
                   </div>
                   <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
-                    Fund causes you care about and mine coins as a reward. Built on Base.
+                    Mine donuts, earn yield, and glaze the world one block at a time. Built on Base.
                   </p>
                 </div>
 
@@ -326,7 +326,7 @@ export function NavBar({
 
               <div className="mt-8 flex items-center justify-between border-t border-[hsl(var(--foreground)/0.1)] pt-5">
                 <div className="text-[12px] text-muted-foreground/50">
-                  give.fun protocol
+                  GlazeCorp protocol
                 </div>
                 <div className="text-[12px] text-muted-foreground/50">
                   Built on Base
