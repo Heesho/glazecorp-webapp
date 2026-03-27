@@ -1,5 +1,6 @@
 // Timing
-export const POLLING_INTERVAL_MS = 15000; // 15 seconds to reduce RPC load
+export const POLLING_INTERVAL_MS = 15000; // 15 seconds for slower-moving supporting data
+export const MINER_QUOTE_POLLING_INTERVAL_MS = 500; // Hammer RPC for accurate mine quotes
 export const TICKER_INTERVAL_MS = 100;
 
 // Halving

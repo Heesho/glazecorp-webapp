@@ -23,8 +23,8 @@ export function useGlaze(
   userAddress: string | undefined,
   walletClient: WalletClient | undefined | null,
   minerState: MinerState,
-  currentPrice: bigint,
-  onSuccess: (newState: MinerState) => void
+  displayedPrice: bigint,
+  syncMinerState: (newState: MinerState) => void
 ): UseGlazeReturn {
   const [isGlazing, setIsGlazing] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -50,16 +50,25 @@ export function useGlaze(
         throw new Error("Unable to fetch the latest mine price");
       }
 
-      const freshPrice = freshState.price;
-      if (freshState.epochId !== minerState.epochId || freshPrice !== currentPrice) {
-        console.info("Mine quote refreshed before submit", {
+      const quoteChanged =
+        freshState.epochId !== minerState.epochId ||
+        freshState.startTime !== minerState.startTime ||
+        freshState.initPrice !== minerState.initPrice ||
+        freshState.price !== displayedPrice;
+
+      if (quoteChanged) {
+        console.info("Mine quote updated before submit", {
           displayedEpochId: minerState.epochId,
           latestEpochId: freshState.epochId,
-          displayedPrice: currentPrice.toString(),
-          latestPrice: freshPrice.toString(),
+          displayedPrice: displayedPrice.toString(),
+          latestPrice: freshState.price.toString(),
         });
+        syncMinerState(freshState);
+        setConnectionError("Mine price updated. Review the new quote and tap Mine again.");
+        return;
       }
 
+      const freshPrice = freshState.price;
       const epochId = BigInt(freshState.epochId);
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60);
       const valueToSend = freshPrice;
@@ -89,7 +98,7 @@ export function useGlaze(
       setMessage("");
 
       const state = await fetchMinerState(signerAddress);
-      if (state) onSuccess(state);
+      if (state) syncMinerState(state);
     } catch (error) {
       console.error(error);
       const txError = error as {
@@ -104,7 +113,16 @@ export function useGlaze(
     } finally {
       setIsGlazing(false);
     }
-  }, [userAddress, walletClient, minerState.epochId, currentPrice, message, onSuccess]);
+  }, [
+    userAddress,
+    walletClient,
+    minerState.epochId,
+    minerState.initPrice,
+    minerState.startTime,
+    displayedPrice,
+    message,
+    syncMinerState,
+  ]);
 
   return {
     isGlazing,

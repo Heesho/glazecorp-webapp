@@ -6,6 +6,7 @@ import { useAccount, useConnect, useWalletClient } from "wagmi";
 import { formatEther } from "viem";
 import { Loader2 } from "lucide-react";
 import { useMinerData, usePriceTicker, useGlaze } from "@/features/terminal";
+import { MINER_QUOTE_POLLING_INTERVAL_MS } from "@/config/miner-constants";
 import { formatEth, formatDonut } from "@/lib/miner/format";
 import { truncateAddress, timeAgo } from "@/lib/format";
 import { getFarcasterConnector } from "@/lib/farcaster-wallet";
@@ -120,21 +121,20 @@ export default function MinePage() {
     userGraphStats,
     ethPrice,
     nextHalvingTime,
-  } = useMinerData(address);
+  } = useMinerData(address, {
+    statePollingIntervalMs: MINER_QUOTE_POLLING_INTERVAL_MS,
+  });
 
-  const { currentPrice, now, halvingDisplay } = usePriceTicker(
-    minerState.initPrice,
-    minerState.startTime,
-    nextHalvingTime
-  );
+  const { now, halvingDisplay } = usePriceTicker(nextHalvingTime);
+  const quotePrice = minerState.price ?? 0n;
 
-  const onGlazeSuccess = useCallback(
+  const syncMinerState = useCallback(
     (newState: typeof minerState) => setMinerState(newState),
     [setMinerState]
   );
 
   const { isGlazing, connectionError, message, setMessage, handleGlaze } =
-    useGlaze(address, walletClient, minerState, currentPrice, onGlazeSuccess);
+    useGlaze(address, walletClient, minerState, quotePrice, syncMinerState);
 
   // Derived values
   const donutPerSecond = useMemo(() => {
@@ -147,7 +147,7 @@ export default function MinePage() {
   }, [minerState.dps]);
 
   const glazedEth = useMemo(() => formatEth(minerState.glazed), [minerState.glazed]);
-  const priceDisplay = useMemo(() => formatEth(currentPrice), [currentPrice]);
+  const priceDisplay = useMemo(() => formatEth(quotePrice), [quotePrice]);
   const totalMined = useMemo(() => formatGraphDonut(stats.minted), [stats.minted]);
   const totalRevenue = useMemo(() => formatGraphEth(stats.revenue), [stats.revenue]);
 
@@ -180,7 +180,7 @@ export default function MinePage() {
 
   // PNL
   const halfInitPrice = safeInitPrice / 2n;
-  const pnlWei = (currentPrice * 80n) / 100n - halfInitPrice;
+  const pnlWei = (quotePrice * 80n) / 100n - halfInitPrice;
   const pnlIsPositive = pnlWei >= 0n;
   const pnlAbsWei = pnlIsPositive ? pnlWei : -pnlWei;
   const pnlEthNum = parseFloat(formatEther(pnlAbsWei));
@@ -297,7 +297,7 @@ export default function MinePage() {
                 </div>
               </div>
               {isConnected ? (
-                <button className="slab-button flex-1 text-sm font-semibold" onClick={handleGlaze} disabled={isGlazing || currentPrice === 0n}>
+                <button className="slab-button flex-1 text-sm font-semibold" onClick={handleGlaze} disabled={isGlazing || quotePrice === 0n}>
                   {isGlazing ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />...</span> : "Mine"}
                 </button>
               ) : (
@@ -582,7 +582,7 @@ export default function MinePage() {
                     <div className="text-lg font-semibold text-primary tabular-nums font-mono">Ξ{priceDisplay}</div>
                     {ethPrice > 0 && (
                       <div className="text-xs text-muted-foreground font-mono tabular-nums">
-                        ${(parseFloat(formatEther(currentPrice)) * ethPrice).toFixed(2)}
+                        ${(parseFloat(formatEther(quotePrice)) * ethPrice).toFixed(2)}
                       </div>
                     )}
                   </div>
@@ -593,7 +593,7 @@ export default function MinePage() {
                   <button
                     className="slab-button flex-1 text-sm font-semibold"
                     onClick={handleGlaze}
-                    disabled={isGlazing || currentPrice === 0n}
+                    disabled={isGlazing || quotePrice === 0n}
                   >
                     {isGlazing ? (
                       <span className="flex items-center justify-center gap-2">
@@ -650,7 +650,7 @@ export default function MinePage() {
                         try { displayPrice = parseFloat(item.price).toFixed(3); } catch {}
 
                         // Live row: earned = current rebate price (ticks down), mined = accrued donuts (ticks up)
-                        const liveEarned = parseFloat(formatEther(currentPrice)) * 0.8;
+                        const liveEarned = parseFloat(formatEther(quotePrice)) * 0.8;
                         const liveMined = accruedDonutsStr;
 
                         return (

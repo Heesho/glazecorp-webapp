@@ -1,31 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { calculateDutchAuctionPrice } from "@/lib/miner/calculations";
 import { TICKER_INTERVAL_MS } from "@/config/miner-constants";
 
 interface UsePriceTickerReturn {
-  currentPrice: bigint;
   now: number;
   halvingDisplay: string;
 }
 
-export function usePriceTicker(
-  initPrice: bigint,
-  startTime: number,
-  nextHalvingTime: number | null
-): UsePriceTickerReturn {
-  const [currentPrice, setCurrentPrice] = useState<bigint>(0n);
+export function usePriceTicker(nextHalvingTime: number | null): UsePriceTickerReturn {
   const [now, setNow] = useState(0);
   const [halvingDisplay, setHalvingDisplay] = useState("--d --h --m --s");
 
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(Date.now());
-
-      // Update price
-      const price = calculateDutchAuctionPrice(initPrice, startTime);
-      setCurrentPrice(price);
 
       // Update halving countdown
       if (nextHalvingTime) {
@@ -45,7 +34,7 @@ export function usePriceTicker(
     }, TICKER_INTERVAL_MS);
 
     return () => clearInterval(timer);
-  }, [initPrice, startTime, nextHalvingTime]);
+  }, [nextHalvingTime]);
 
-  return { currentPrice, now, halvingDisplay };
+  return { now, halvingDisplay };
 }

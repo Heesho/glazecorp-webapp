@@ -39,7 +39,15 @@ interface UseMinerDataReturn {
   nextHalvingTime: number | null;
 }
 
-export function useMinerData(userAddress?: string): UseMinerDataReturn {
+interface UseMinerDataOptions {
+  statePollingIntervalMs?: number;
+}
+
+export function useMinerData(
+  userAddress?: string,
+  options: UseMinerDataOptions = {}
+): UseMinerDataReturn {
+  const { statePollingIntervalMs = POLLING_INTERVAL_MS } = options;
   const [minerState, setMinerState] = useState<MinerState>(INITIAL_STATE);
   const [kingProfile, setKingProfile] = useState<FarcasterProfile | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -50,18 +58,35 @@ export function useMinerData(userAddress?: string): UseMinerDataReturn {
   const [nextHalvingTime, setNextHalvingTime] = useState<number | null>(null);
   const fetchedAddressesRef = useRef<Set<string>>(new Set());
 
-  // Main polling cycle
+  // Poll the contract state separately so the mine quote can refresh aggressively.
   useEffect(() => {
-    const refresh = async () => {
+    let cancelled = false;
+
+    const refreshState = async () => {
       const addr = userAddress ?? ZERO_ADDRESS;
-
-      // Contract State
       const state = await fetchMinerState(addr);
-      if (state) setMinerState(state);
+      if (!cancelled && state) {
+        setMinerState(state);
+      }
+    };
 
-      // Graph Data
+    refreshState();
+    const interval = setInterval(refreshState, statePollingIntervalMs);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [statePollingIntervalMs, userAddress]);
+
+  // Slower-moving graph data and USD prices can refresh on a longer interval.
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshAncillaryData = async () => {
+      const addr = userAddress ?? ZERO_ADDRESS;
       const graphData = await fetchGraphData(addr);
-      if (graphData) {
+      if (!cancelled && graphData) {
         if (graphData.miners?.[0]) {
           setStats(graphData.miners[0]);
         }
@@ -82,14 +107,19 @@ export function useMinerData(userAddress?: string): UseMinerDataReturn {
         }
       }
 
-      // ETH Price
       const price = await fetchEthPrice();
-      if (price > 0) setEthPrice(price);
+      if (!cancelled && price > 0) {
+        setEthPrice(price);
+      }
     };
 
-    refresh();
-    const interval = setInterval(refresh, POLLING_INTERVAL_MS);
-    return () => clearInterval(interval);
+    refreshAncillaryData();
+    const interval = setInterval(refreshAncillaryData, POLLING_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [userAddress]);
 
   // Fetch king profile when miner changes
