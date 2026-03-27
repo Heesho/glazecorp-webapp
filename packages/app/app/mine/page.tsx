@@ -125,12 +125,8 @@ export default function MinePage() {
     statePollingIntervalMs: MINER_QUOTE_POLLING_INTERVAL_MS,
   });
 
-  const { currentPrice, now, halvingDisplay } = usePriceTicker(
-    minerState.initPrice,
-    minerState.startTime,
-    nextHalvingTime
-  );
-  const quotePrice = currentPrice > 0n ? currentPrice : (minerState.price ?? 0n);
+  const { now, halvingDisplay } = usePriceTicker(nextHalvingTime);
+  const quotePrice = minerState.price ?? 0n;
 
   const syncMinerState = useCallback(
     (newState: typeof minerState) => setMinerState(newState),
