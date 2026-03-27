@@ -10,6 +10,7 @@ const menuItems = [
   { href: "/mine", label: "Mine" },
   { href: "/vote", label: "Vote" },
   { href: "/auction", label: "Auction" },
+  { href: "/system", label: "System" },
   { href: "/info", label: "About" },
 ] as const;
 
@@ -19,6 +20,7 @@ function getPageName(pathname: string): string | null {
   if (pathname === "/mine") return "Mine";
   if (pathname === "/vote") return "Vote";
   if (pathname === "/auction") return "Auction";
+  if (pathname === "/system") return "System";
   if (pathname === "/launch") return "Launch";
   if (pathname === "/info") return "About";
   if (pathname === "/profile") return "Profile";

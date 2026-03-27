@@ -227,8 +227,11 @@ export default function VotePage() {
       if (voteTxStep === "claiming") return "Claiming...";
       return "Processing...";
     }
+    if (isConnected && hasVotingPower && !canVote) {
+      return `Vote in ${formatTimeUntilNextEpoch(lastVoted)}`;
+    }
     return "Vote";
-  }, [isVoteBusy, voteTxStep]);
+  }, [isVoteBusy, voteTxStep, isConnected, hasVotingPower, canVote, lastVoted]);
 
   // ─── render ─────────────────────────────────────────────────────────────
 
