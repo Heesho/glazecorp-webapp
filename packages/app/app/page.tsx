@@ -75,7 +75,7 @@ export default function LandingPage() {
               Enter App
             </button>
             <a
-              href="https://give.fun"
+              href="https://givefun.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-liquid-glass inline-flex items-center justify-center gap-1.5 sm:gap-2 w-[110px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
@@ -84,7 +84,7 @@ export default function LandingPage() {
               give.fun
             </a>
             <a
-              href="https://stickr.net"
+              href="https://stickrnet.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-liquid-glass inline-flex items-center justify-center gap-1.5 sm:gap-2 w-[110px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
