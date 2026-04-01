@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAccount, useConnect, useReadContract } from "wagmi";
-import { formatUnits, zeroAddress } from "viem";
+import { useAccount, useConnect, useReadContract, useReadContracts } from "wagmi";
+import { formatUnits, formatEther, zeroAddress } from "viem";
 import { base } from "wagmi/chains";
 import { Loader2 } from "lucide-react";
 
@@ -14,6 +14,7 @@ import {
 } from "@/config/govern-constants";
 import { getFarcasterConnector } from "@/lib/farcaster-wallet";
 import { MINER_MULTICALL_ADDRESS, MINER_MULTICALL_ABI } from "@/config/miner-constants";
+import { ERC20_ABI } from "@/lib/contracts";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -73,13 +74,14 @@ function getPaymentTokenUsdPrice(
   donutPriceUsd: number,
   btcPrice: number,
   tokenPrices?: Record<string, number>,
+  donutEthLpPriceUsd?: number,
 ): number {
   const t = token.toLowerCase();
   if (t === TOKEN_ADDRESSES.weth.toLowerCase()) return ethPrice;
   if (t === TOKEN_ADDRESSES.usdc.toLowerCase()) return 1;
   if (t === TOKEN_ADDRESSES.cbbtc.toLowerCase()) return btcPrice || 0;
   if (t === TOKEN_ADDRESSES.donut.toLowerCase()) return donutPriceUsd;
-  if (t === TOKEN_ADDRESSES.donutEthLp.toLowerCase()) return donutPriceUsd * 2;
+  if (t === TOKEN_ADDRESSES.donutEthLp.toLowerCase()) return donutEthLpPriceUsd || 0;
   if (t === TOKEN_ADDRESSES.aero.toLowerCase()) return tokenPrices?.aero || 0;
   if (t === TOKEN_ADDRESSES.clanker.toLowerCase()) return tokenPrices?.clanker || 0;
   if (t === TOKEN_ADDRESSES.bnkr.toLowerCase()) return tokenPrices?.bnkr || 0;
@@ -153,6 +155,7 @@ function AuctionCard({
   donutPriceUsd,
   btcPrice,
   tokenPrices,
+  donutEthLpPriceUsd,
 }: {
   strategy: StrategyAuctionData;
   isConnected: boolean;
@@ -168,9 +171,10 @@ function AuctionCard({
   donutPriceUsd: number;
   btcPrice: number;
   tokenPrices: Record<string, number>;
+  donutEthLpPriceUsd: number;
 }) {
   const symbol = getTokenSymbol(strategy.paymentToken);
-  const payTokenPrice = getPaymentTokenUsdPrice(strategy.paymentToken, ethPrice, donutPriceUsd, btcPrice, tokenPrices);
+  const payTokenPrice = getPaymentTokenUsdPrice(strategy.paymentToken, ethPrice, donutPriceUsd, btcPrice, tokenPrices, donutEthLpPriceUsd);
   const payNum = Number(formatUnits(strategy.currentPrice, strategy.paymentTokenDecimals));
   const payUsd = payNum * payTokenPrice;
   const getNum = Number(formatUnits(strategy.revenueBalance, 18));
@@ -346,6 +350,23 @@ export default function AuctionPage() {
     ? Number(donutPriceInEth) / 1e18 * ethPrice
     : 0;
 
+  // On-chain LP price: (2 * wethBalanceInLp * ethPrice) / lpTotalSupply
+  const lpAddress = TOKEN_ADDRESSES.donutEthLp.toLowerCase() as `0x${string}`;
+  const wethAddress = TOKEN_ADDRESSES.weth.toLowerCase() as `0x${string}`;
+  const { data: lpOnChainData } = useReadContracts({
+    contracts: [
+      { address: wethAddress, abi: ERC20_ABI, functionName: "balanceOf", args: [lpAddress], chainId: base.id },
+      { address: lpAddress, abi: ERC20_ABI, functionName: "totalSupply", chainId: base.id },
+    ],
+    query: { refetchInterval: POLLING_INTERVAL_MS, staleTime: 15_000 },
+  });
+  const donutEthLpPriceUsd = useMemo(() => {
+    const wethBal = lpOnChainData?.[0]?.result as bigint | undefined;
+    const lpSupply = lpOnChainData?.[1]?.result as bigint | undefined;
+    if (!wethBal || !lpSupply || lpSupply === 0n || ethPrice <= 0) return 0;
+    return (2 * Number(formatEther(wethBal)) * ethPrice) / Number(formatEther(lpSupply));
+  }, [lpOnChainData, ethPrice]);
+
   // Fetch ETH + BTC price
   useEffect(() => {
     const fetchPrices = async () => {
@@ -435,10 +456,10 @@ export default function AuctionPage() {
           {strategies.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...strategies].sort((a, b) => {
-                const payA = Number(formatUnits(a.currentPrice, a.paymentTokenDecimals)) * getPaymentTokenUsdPrice(a.paymentToken, ethPrice, donutPriceUsd, btcPrice);
+                const payA = Number(formatUnits(a.currentPrice, a.paymentTokenDecimals)) * getPaymentTokenUsdPrice(a.paymentToken, ethPrice, donutPriceUsd, btcPrice, tokenPrices, donutEthLpPriceUsd);
                 const getA = Number(formatUnits(a.revenueBalance, 18)) * ethPrice;
                 const roiA = payA > 0 ? ((getA - payA) / payA) * 100 : -Infinity;
-                const payB = Number(formatUnits(b.currentPrice, b.paymentTokenDecimals)) * getPaymentTokenUsdPrice(b.paymentToken, ethPrice, donutPriceUsd, btcPrice);
+                const payB = Number(formatUnits(b.currentPrice, b.paymentTokenDecimals)) * getPaymentTokenUsdPrice(b.paymentToken, ethPrice, donutPriceUsd, btcPrice, tokenPrices, donutEthLpPriceUsd);
                 const getB = Number(formatUnits(b.revenueBalance, 18)) * ethPrice;
                 const roiB = payB > 0 ? ((getB - payB) / payB) * 100 : -Infinity;
                 return roiB - roiA;
@@ -459,6 +480,7 @@ export default function AuctionPage() {
                   donutPriceUsd={donutPriceUsd}
                   btcPrice={btcPrice}
                   tokenPrices={tokenPrices}
+                  donutEthLpPriceUsd={donutEthLpPriceUsd}
                 />
               ))}
             </div>
