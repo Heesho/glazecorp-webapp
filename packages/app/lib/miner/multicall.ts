@@ -1,4 +1,4 @@
-import { createPublicClient, http, fallback, type Address } from "viem";
+import { createPublicClient, http, fallback, isAddress, type Address } from "viem";
 import { base } from "viem/chains";
 import type { MinerState } from "@/types/miner";
 import {
@@ -12,7 +12,15 @@ import {
 // Singleton client - reused across all calls
 const client = createPublicClient({
   chain: base,
-  transport: fallback(MINER_RPC_URLS.map((url) => http(url))),
+  transport: fallback(
+    MINER_RPC_URLS.map((url) =>
+      http(url, {
+        retryCount: 1,
+        timeout: 10_000,
+      })
+    ),
+    { rank: true }
+  ),
 });
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
@@ -23,6 +31,10 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as Address;
 export async function fetchMinerState(
   userAddress: string = ZERO_ADDRESS
 ): Promise<MinerState | null> {
+  if (!isAddress(userAddress)) {
+    return null;
+  }
+
   try {
     const data = await client.readContract({
       address: MINER_MULTICALL_ADDRESS as Address,
@@ -47,7 +59,9 @@ export async function fetchMinerState(
       donutBalance: data.donutBalance,
     };
   } catch (error) {
-    console.error("RPC Error:", error);
+    if (process.env.NEXT_PUBLIC_DEBUG_RPC_ERRORS === "true") {
+      console.warn("Miner state RPC failed:", error);
+    }
     return null;
   }
 }
@@ -64,7 +78,9 @@ export async function fetchMinerStartTime(): Promise<number | null> {
     });
     return Number(startTime);
   } catch (error) {
-    console.error("Failed to fetch miner startTime:", error);
+    if (process.env.NEXT_PUBLIC_DEBUG_RPC_ERRORS === "true") {
+      console.warn("Failed to fetch miner startTime:", error);
+    }
     return null;
   }
 }

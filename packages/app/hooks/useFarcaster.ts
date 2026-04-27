@@ -1,10 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { useAccount, useConnect } from "wagmi";
 import { base } from "wagmi/chains";
-import { getFarcasterConnector } from "@/lib/farcaster-wallet";
+import {
+  getBrowserWalletConnectors,
+  getFarcasterConnector,
+  shouldTryNextConnector,
+} from "@/lib/farcaster-wallet";
 
 export type FarcasterUser = {
   fid: number;
@@ -29,8 +33,8 @@ export function useFarcaster() {
 
   // Find connectors by type
   const farcasterConnector = getFarcasterConnector(connectors);
-  const injectedConnector = connectors.find((c) => c.id === "injected");
-  const primaryConnector = isInFrame ? farcasterConnector : injectedConnector;
+  const browserConnectors = useMemo(() => getBrowserWalletConnectors(connectors), [connectors]);
+  const primaryConnector = isInFrame ? farcasterConnector : browserConnectors[0];
 
   // Fetch Farcaster context and detect frame environment
   useEffect(() => {
@@ -65,37 +69,53 @@ export function useFarcaster() {
       return address;
     }
 
-    if (!primaryConnector) {
+    const connectorAttempts = isInFrame ? (farcasterConnector ? [farcasterConnector] : []) : browserConnectors;
+
+    if (connectorAttempts.length === 0) {
       throw new Error("Wallet connector not available");
     }
 
-    try {
-      const result = await connectAsync({
-        connector: primaryConnector,
-        chainId: base.id,
-      });
-      return result.accounts[0];
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        error.name === "ConnectorAlreadyConnectedError"
-      ) {
-        if (address) {
-          return address;
-        }
+    let lastError: unknown;
 
-        if (typeof primaryConnector.getAccounts === "function") {
-          const accounts = await primaryConnector.getAccounts().catch(() => []);
-          if (accounts[0]) {
-            return accounts[0];
+    for (const connector of connectorAttempts) {
+      try {
+        const result = await connectAsync({
+          connector,
+          chainId: base.id,
+        });
+        return result.accounts[0];
+      } catch (error) {
+        if (
+          error instanceof Error &&
+          error.name === "ConnectorAlreadyConnectedError"
+        ) {
+          if (address) {
+            return address;
           }
+
+          if (typeof connector.getAccounts === "function") {
+            const accounts = await connector.getAccounts().catch(() => []);
+            if (accounts[0]) {
+              return accounts[0];
+            }
+          }
+
+          return undefined;
         }
 
-        return undefined;
+        lastError = error;
+        if (!shouldTryNextConnector(connector, error)) {
+          break;
+        }
       }
-      throw error;
     }
-  }, [address, connectAsync, primaryConnector]);
+
+    if (lastError instanceof Error) {
+      throw lastError;
+    }
+
+    throw new Error("Wallet connection failed");
+  }, [address, browserConnectors, connectAsync, farcasterConnector, isInFrame]);
 
   return {
     context,

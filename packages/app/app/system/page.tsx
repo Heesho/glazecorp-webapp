@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { useSystemData, useFlushAndDistribute } from "@/features/system";
 import { PAYMENT_TOKEN_SYMBOLS, TOKEN_ADDRESSES } from "@/config/govern-constants";
-import { getFarcasterConnector } from "@/lib/farcaster-wallet";
+import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -181,15 +181,20 @@ export default function SystemPage() {
     useFlushAndDistribute(address, refetchAll);
 
   const handleConnect = async () => {
-    const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = getFarcasterConnector(connectors);
-    const connector = farcaster || injected;
-    if (connector) {
+    let lastError: unknown;
+
+    for (const connector of getPreferredWalletConnectors(connectors, { preferFarcaster: true })) {
       try {
         await connectAsync({ connector });
+        return;
       } catch (e) {
-        console.error("Connect failed:", e);
+        lastError = e;
+        if (!shouldTryNextConnector(connector, e)) break;
       }
+    }
+
+    if (lastError) {
+      console.error("Connect failed:", lastError);
     }
   };
 

@@ -32,8 +32,9 @@ const baseTransports = BASE_RPC_ENDPOINTS.map((url) =>
   })
 );
 
-// Always include both connectors - wagmi picks the right one at runtime
-const connectors = [farcasterMiniApp(), injected()];
+// Include a targeted Rabby connector so users can connect Rabby even when
+// another extension owns window.ethereum.
+const connectors = [farcasterMiniApp(), injected({ target: "rabby" }), injected()];
 
 export const wagmiConfig = createConfig({
   chains: [base],

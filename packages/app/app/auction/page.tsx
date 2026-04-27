@@ -12,7 +12,7 @@ import {
   TOKEN_ADDRESSES,
   POLLING_INTERVAL_MS,
 } from "@/config/govern-constants";
-import { getFarcasterConnector } from "@/lib/farcaster-wallet";
+import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
 import { MINER_MULTICALL_ADDRESS, MINER_MULTICALL_ABI } from "@/config/miner-constants";
 import { ERC20_ABI } from "@/lib/contracts";
 
@@ -403,15 +403,20 @@ export default function AuctionPage() {
   } = useAuctions(address);
 
   const handleConnect = async () => {
-    const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = getFarcasterConnector(connectors);
-    const connector = farcaster || injected;
-    if (connector) {
+    let lastError: unknown;
+
+    for (const connector of getPreferredWalletConnectors(connectors, { preferFarcaster: true })) {
       try {
         await connectAsync({ connector });
+        return;
       } catch (e) {
-        console.error("Connect failed:", e);
+        lastError = e;
+        if (!shouldTryNextConnector(connector, e)) break;
       }
+    }
+
+    if (lastError) {
+      console.error("Connect failed:", lastError);
     }
   };
 

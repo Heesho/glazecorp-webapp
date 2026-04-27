@@ -1,6 +1,6 @@
 // Timing
 export const POLLING_INTERVAL_MS = 15000; // 15 seconds for slower-moving supporting data
-export const MINER_QUOTE_POLLING_INTERVAL_MS = 500; // Fast quote refresh without piling up requests
+export const MINER_QUOTE_POLLING_INTERVAL_MS = 5000; // Keep quote fresh without hammering public RPCs
 export const TICKER_INTERVAL_MS = 100;
 
 // Halving
@@ -12,10 +12,17 @@ export const MINER_CONTRACT_ADDRESS = "0xF69614F4Ee8D4D3879dd53d5A039eB3114C794F
 
 // RPC Configuration
 export const MINER_RPC_URLS = [
+  process.env.NEXT_PUBLIC_BASE_RPC_URL,
   process.env.NEXT_PUBLIC_RPC_URL,
+  process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL,
   "https://mainnet.base.org",
   "https://base.llamarpc.com",
-].filter(Boolean) as string[];
+  "https://base.meowrpc.com",
+  "https://base-pokt.nodies.app",
+  "https://1rpc.io/base",
+  "https://base.drpc.org",
+  "https://base-rpc.publicnode.com",
+].filter((url, index, urls): url is string => !!url && urls.indexOf(url) === index);
 
 // Multicall ABI for getMiner and mine functions
 export const MINER_MULTICALL_ABI = [

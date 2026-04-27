@@ -9,7 +9,7 @@ import { useMinerData, usePriceTicker, useGlaze } from "@/features/terminal";
 import { MINER_QUOTE_POLLING_INTERVAL_MS } from "@/config/miner-constants";
 import { formatEth, formatDonut } from "@/lib/miner/format";
 import { truncateAddress, timeAgo } from "@/lib/format";
-import { getFarcasterConnector } from "@/lib/farcaster-wallet";
+import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
 import type { FarcasterProfile, FeedItem } from "@/types/miner";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -211,15 +211,20 @@ export default function MinePage() {
   const totalUsdStr = `${totalIsPositive ? "+" : "-"}$${Math.abs(totalUsdNum).toFixed(2)}`;
 
   const handleConnect = async () => {
-    const injected = connectors.find((c) => c.id === "injected");
-    const farcaster = getFarcasterConnector(connectors);
-    const connector = farcaster || injected;
-    if (connector) {
+    let lastError: unknown;
+
+    for (const connector of getPreferredWalletConnectors(connectors, { preferFarcaster: true })) {
       try {
         await connectAsync({ connector });
+        return;
       } catch (e) {
-        console.error("Connect failed:", e);
+        lastError = e;
+        if (!shouldTryNextConnector(connector, e)) break;
       }
+    }
+
+    if (lastError) {
+      console.error("Connect failed:", lastError);
     }
   };
 

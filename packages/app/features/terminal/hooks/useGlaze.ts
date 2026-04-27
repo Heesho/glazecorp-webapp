@@ -44,12 +44,18 @@ export function useGlaze(
         });
       }
 
-      const displayedPrice = minerState.price;
+      const latestState = await fetchMinerState(signerAddress);
+      const stateForTx = latestState ?? minerState;
+      if (latestState) {
+        syncMinerState(latestState);
+      }
+
+      const displayedPrice = stateForTx.price;
       if (displayedPrice <= 0n) {
         throw new Error("Unable to fetch the latest mine price");
       }
 
-      const epochId = BigInt(minerState.epochId);
+      const epochId = BigInt(stateForTx.epochId);
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60);
       const valueToSend = displayedPrice;
       const uri = message.trim() || "We Glaze The World - GlazeCorp.io";
@@ -96,10 +102,7 @@ export function useGlaze(
   }, [
     userAddress,
     walletClient,
-    minerState.epochId,
-    minerState.initPrice,
-    minerState.price,
-    minerState.startTime,
+    minerState,
     message,
     syncMinerState,
   ]);
