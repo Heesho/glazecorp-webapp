@@ -63,6 +63,9 @@ export const wagmiConfig = createConfig({
   storage: createStorage({
     storage: cookieStorage,
   }),
-  // Increased polling interval to reduce request frequency
-  pollingInterval: 15_000,
+  // Base blocks every ~2s. Poll at 2s so useWaitForTransactionReceipt
+  // and watchers detect confirmations promptly — previously set to 15s
+  // to spare a rate-limited public RPC, no longer needed now that Alchemy
+  // is healthy.
+  pollingInterval: 2_000,
 });
