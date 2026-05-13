@@ -2,7 +2,7 @@ import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
 import { fallback, http, createStorage, cookieStorage } from "wagmi";
 import { base } from "wagmi/chains";
 import { createConfig } from "wagmi";
-import { injected, walletConnect } from "wagmi/connectors";
+import { injected } from "wagmi/connectors";
 
 // Backup RPC endpoints for Base mainnet with automatic fallback.
 // Public RPCs that consistently 403 from Vercel egress (llamarpc, ankr,
@@ -27,35 +27,12 @@ const baseTransports = BASE_RPC_ENDPOINTS.map((url) =>
   })
 );
 
-const WALLETCONNECT_PROJECT_ID =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "f8090830e0bee3f6db0c4652c1b7780d";
-
-// Resolve the app URL from the actual page when running in the browser so
-// the WalletConnect metadata matches whichever domain the user loaded
-// (glazecorp.io vs glazecorp.vercel.app). Falls back to env var, then to
-// the primary domain for SSR.
-const APP_URL =
-  typeof window !== "undefined"
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_APP_URL || "https://glazecorp.io";
-
 // Include a targeted Rabby connector so users can connect Rabby even when
-// another extension owns window.ethereum. WalletConnect is included so
-// mobile-browser users without an injected wallet can still connect via QR.
+// another extension owns window.ethereum.
 const connectors = [
   farcasterMiniApp(),
   injected({ target: "rabby" }),
   injected(),
-  walletConnect({
-    projectId: WALLETCONNECT_PROJECT_ID,
-    showQrModal: true,
-    metadata: {
-      name: "GlazeCorp",
-      description: "Mine donuts, earn yield, and glaze the world one block at a time.",
-      url: APP_URL,
-      icons: [`${APP_URL}/media/icon.png`],
-    },
-  }),
 ];
 
 export const wagmiConfig = createConfig({
