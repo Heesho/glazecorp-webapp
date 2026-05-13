@@ -32,15 +32,37 @@ export function isRabbyConnector(connector: ConnectorLike | null | undefined): b
   );
 }
 
-export function isBrowserWalletConnector(connector: ConnectorLike | null | undefined): boolean {
-  if (!connector || isFarcasterConnector(connector)) return false;
-  return connector.type === "injected" || connector.id === "injected" || isRabbyConnector(connector);
+export function isBaseAccountConnector(connector: ConnectorLike | null | undefined): boolean {
+  if (!connector) return false;
+  const rdnsValues =
+    typeof connector.rdns === "string" ? [connector.rdns] : connector.rdns ?? [];
+  return (
+    connector.type === "baseAccount" ||
+    connector.id === "baseAccount" ||
+    rdnsValues.some((rdns) => rdns.toLowerCase() === "app.base.account")
+  );
 }
 
+export function isBrowserWalletConnector(connector: ConnectorLike | null | undefined): boolean {
+  if (!connector || isFarcasterConnector(connector)) return false;
+  return (
+    connector.type === "injected" ||
+    connector.id === "injected" ||
+    isRabbyConnector(connector) ||
+    isBaseAccountConnector(connector)
+  );
+}
+
+// Order: Rabby (targeted) → generic injected → Base Account → anything else.
+// Putting Base Account after `injected` means desktop users with MetaMask
+// installed still see MetaMask, while Base App users (where `injected()`
+// finds no provider and errors with ProviderNotFoundError) fall through to
+// baseAccount, which speaks Base's wallet_connect protocol.
 export function getBrowserWalletConnectors<T extends ConnectorLike>(connectors: readonly T[]): T[] {
   const preferred = [
     connectors.filter((connector) => isRabbyConnector(connector)),
     connectors.filter((connector) => connector.id === "injected"),
+    connectors.filter((connector) => isBaseAccountConnector(connector)),
     connectors.filter((connector) => isBrowserWalletConnector(connector)),
     connectors.filter((connector) => !isFarcasterConnector(connector)),
   ].flat();
