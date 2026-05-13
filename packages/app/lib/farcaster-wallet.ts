@@ -32,27 +32,16 @@ export function isRabbyConnector(connector: ConnectorLike | null | undefined): b
   );
 }
 
-export function isWalletConnectConnector(connector: ConnectorLike | null | undefined): boolean {
-  if (!connector) return false;
-  return connector.type === "walletConnect" || connector.id === "walletConnect";
-}
-
 export function isBrowserWalletConnector(connector: ConnectorLike | null | undefined): boolean {
   if (!connector || isFarcasterConnector(connector)) return false;
-  return (
-    connector.type === "injected" ||
-    connector.id === "injected" ||
-    isRabbyConnector(connector) ||
-    isWalletConnectConnector(connector)
-  );
+  return connector.type === "injected" || connector.id === "injected" || isRabbyConnector(connector);
 }
 
 export function getBrowserWalletConnectors<T extends ConnectorLike>(connectors: readonly T[]): T[] {
   const preferred = [
     connectors.filter((connector) => isRabbyConnector(connector)),
     connectors.filter((connector) => connector.id === "injected"),
-    connectors.filter((connector) => isBrowserWalletConnector(connector) && !isWalletConnectConnector(connector)),
-    connectors.filter((connector) => isWalletConnectConnector(connector)),
+    connectors.filter((connector) => isBrowserWalletConnector(connector)),
     connectors.filter((connector) => !isFarcasterConnector(connector)),
   ].flat();
 
