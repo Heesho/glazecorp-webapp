@@ -1,52 +1,43 @@
 import type { FarcasterProfile } from "@/types/miner";
 
-const NEYNAR_API_KEY = process.env.NEXT_PUBLIC_NEYNAR_API_KEY || "";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
+type ApiProfile = {
+  fid: number | null;
+  username: string | null;
+  displayName: string | null;
+  pfpUrl: string | null;
+};
+
+function toFarcasterProfile(payload: ApiProfile | null | undefined): FarcasterProfile | null {
+  if (!payload || payload.fid == null) return null;
+  return {
+    username: payload.username ?? "",
+    displayName: payload.displayName ?? "",
+    pfp: payload.pfpUrl ?? "",
+    fid: payload.fid,
+  };
+}
+
 /**
- * Fetch a single Farcaster profile by Ethereum address
+ * Fetch a single Farcaster profile by Ethereum address.
+ * Proxied through /api/neynar/user so the API key never leaves the server.
  */
 export async function fetchFarcasterProfile(
-  address: string
+  address: string,
 ): Promise<FarcasterProfile | null> {
-  if (address === ZERO_ADDRESS) return null;
-  if (!NEYNAR_API_KEY) {
-    console.error(
-      "Neynar API key not configured. Check NEXT_PUBLIC_NEYNAR_API_KEY in .env.local"
-    );
-    return null;
-  }
+  if (!address || address === ZERO_ADDRESS) return null;
 
   try {
-    const res = await fetch(
-      `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${address}`,
-      {
-        headers: {
-          accept: "application/json",
-          "x-api-key": NEYNAR_API_KEY,
-        },
-      }
-    );
-
+    const res = await fetch(`/api/neynar/user?address=${encodeURIComponent(address)}`);
     if (!res.ok) {
       if (res.status !== 404) {
-        const errorBody = await res.text();
-        console.error("Neynar API error:", res.status, errorBody);
+        console.error("Neynar proxy error:", res.status, await res.text().catch(() => ""));
       }
       return null;
     }
-
-    const json = await res.json();
-    const user = json[address.toLowerCase()]?.[0];
-
-    if (!user) return null;
-
-    return {
-      username: user.username,
-      displayName: user.display_name,
-      pfp: user.pfp_url,
-      fid: user.fid,
-    };
+    const json = (await res.json()) as { user: ApiProfile | null };
+    return toFarcasterProfile(json.user);
   } catch (error) {
     console.error("Neynar Error:", error);
     return null;
@@ -54,56 +45,39 @@ export async function fetchFarcasterProfile(
 }
 
 /**
- * Fetch multiple Farcaster profiles by Ethereum addresses (bulk)
+ * Fetch multiple Farcaster profiles by Ethereum addresses (bulk).
+ * Proxied through /api/neynar/users-by-addresses so the API key never leaves the server.
  */
 export async function fetchFarcasterProfiles(
-  addresses: string[]
+  addresses: string[],
 ): Promise<Record<string, FarcasterProfile>> {
   if (addresses.length === 0) return {};
-  if (!NEYNAR_API_KEY) {
-    console.error("Neynar API key not configured");
-    return {};
-  }
 
   const unique = [
     ...new Set(
       addresses
         .filter((a) => a && a.length > 0 && a !== ZERO_ADDRESS)
-        .map((a) => a.toLowerCase())
+        .map((a) => a.toLowerCase()),
     ),
   ];
   if (unique.length === 0) return {};
 
   try {
-    const url = `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${unique.join(",")}`;
-    const res = await fetch(url, {
-      headers: {
-        accept: "application/json",
-        "x-api-key": NEYNAR_API_KEY,
-      },
-    });
-
+    const res = await fetch(
+      `/api/neynar/users-by-addresses?addresses=${encodeURIComponent(unique.join(","))}`,
+    );
     if (!res.ok) {
       if (res.status !== 404) {
-        const errorBody = await res.text();
-        console.error("Neynar Bulk API error:", res.status, errorBody);
+        console.error("Neynar bulk proxy error:", res.status, await res.text().catch(() => ""));
       }
       return {};
     }
-
-    const json = await res.json();
+    const json = (await res.json()) as { users: Record<string, ApiProfile | null> };
 
     const result: Record<string, FarcasterProfile> = {};
-    for (const addr of unique) {
-      const user = json[addr]?.[0];
-      if (user) {
-        result[addr] = {
-          username: user.username,
-          displayName: user.display_name,
-          pfp: user.pfp_url,
-          fid: user.fid,
-        };
-      }
+    for (const [addr, payload] of Object.entries(json.users ?? {})) {
+      const profile = toFarcasterProfile(payload);
+      if (profile) result[addr] = profile;
     }
     return result;
   } catch (error) {
