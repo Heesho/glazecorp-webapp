@@ -10,17 +10,16 @@ export const HALVING_PERIOD_SECONDS = 30 * 24 * 60 * 60; // 30 days
 export const MINER_MULTICALL_ADDRESS = "0x3ec144554b484C6798A683E34c8e8E222293f323";
 export const MINER_CONTRACT_ADDRESS = "0xF69614F4Ee8D4D3879dd53d5A039eB3114C794F6";
 
-// RPC Configuration
+// RPC Configuration. Public endpoints that consistently 403 from Vercel
+// egress IPs (mainnet.base.org, llamarpc, drpc) are excluded — they only
+// added console noise without ever serving a request.
 export const MINER_RPC_URLS = [
   process.env.NEXT_PUBLIC_BASE_RPC_URL,
   process.env.NEXT_PUBLIC_RPC_URL,
   process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL,
-  "https://mainnet.base.org",
-  "https://base.llamarpc.com",
   "https://base.meowrpc.com",
   "https://base-pokt.nodies.app",
   "https://1rpc.io/base",
-  "https://base.drpc.org",
   "https://base-rpc.publicnode.com",
 ].filter((url, index, urls): url is string => !!url && urls.indexOf(url) === index);
 
