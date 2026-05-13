@@ -4,21 +4,16 @@ import { base } from "wagmi/chains";
 import { createConfig } from "wagmi";
 import { injected, walletConnect } from "wagmi/connectors";
 
-// Backup RPC endpoints for Base mainnet with automatic fallback
-// Order: Primary (env) -> Alchemy (env) -> Public RPCs
+// Backup RPC endpoints for Base mainnet with automatic fallback.
+// Public RPCs that consistently 403 from Vercel egress (llamarpc, ankr,
+// drpc) are intentionally excluded — they only added console noise.
 const BASE_RPC_ENDPOINTS = [
-  // Primary RPC from env
   process.env.NEXT_PUBLIC_BASE_RPC_URL,
-  // Alchemy backup from env
   process.env.NEXT_PUBLIC_ALCHEMY_RPC_URL,
-  // Public backup RPCs (ordered by reliability)
-  "https://base.llamarpc.com",
   "https://base.meowrpc.com",
   "https://base-pokt.nodies.app",
   "https://1rpc.io/base",
-  "https://base.drpc.org",
   "https://base-rpc.publicnode.com",
-  "https://rpc.ankr.com/base",
   "https://base.gateway.tenderly.co",
 ].filter((url): url is string => !!url && url !== "");
 
@@ -33,7 +28,16 @@ const baseTransports = BASE_RPC_ENDPOINTS.map((url) =>
 );
 
 const WALLETCONNECT_PROJECT_ID =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "d04f41bca90773e76c0fc51b6aa734c5";
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "f8090830e0bee3f6db0c4652c1b7780d";
+
+// Resolve the app URL from the actual page when running in the browser so
+// the WalletConnect metadata matches whichever domain the user loaded
+// (glazecorp.io vs glazecorp.vercel.app). Falls back to env var, then to
+// the primary domain for SSR.
+const APP_URL =
+  typeof window !== "undefined"
+    ? window.location.origin
+    : process.env.NEXT_PUBLIC_APP_URL || "https://glazecorp.io";
 
 // Include a targeted Rabby connector so users can connect Rabby even when
 // another extension owns window.ethereum. WalletConnect is included so
@@ -48,8 +52,8 @@ const connectors = [
     metadata: {
       name: "GlazeCorp",
       description: "Mine donuts, earn yield, and glaze the world one block at a time.",
-      url: "https://glazecorp.vercel.app",
-      icons: ["https://glazecorp.vercel.app/media/icon.png"],
+      url: APP_URL,
+      icons: [`${APP_URL}/media/icon.png`],
     },
   }),
 ];
@@ -59,9 +63,11 @@ export const wagmiConfig = createConfig({
   ssr: true,
   connectors,
   transports: {
-    // Fallback transport: tries each RPC in order until one succeeds
-    // rank: true means it will prefer faster RPCs over time
-    [base.id]: fallback(baseTransports, { rank: true }),
+    // Tries each RPC in order. We intentionally don't pass `rank: true`
+    // because it makes viem periodically ping every endpoint to measure
+    // latency, and any 403/timeout from the backup pool fills the console
+    // with noise even when Alchemy is healthy.
+    [base.id]: fallback(baseTransports),
   },
   storage: createStorage({
     storage: cookieStorage,

@@ -9,7 +9,7 @@ import { Providers } from "@/components/providers";
 import { GlobalNav } from "@/components/global-nav";
 import { PageTransition } from "@/components/page-transition";
 
-const appDomain = process.env.NEXT_PUBLIC_APP_URL || "https://givedotfun.vercel.app";
+const appDomain = process.env.NEXT_PUBLIC_APP_URL || "https://glazecorp.io";
 const heroImageUrl = `${appDomain}/media/hero.png`;
 const splashImageUrl = `${appDomain}/media/splash.png`;
 
