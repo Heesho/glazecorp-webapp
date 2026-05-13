@@ -33,7 +33,10 @@ const nextConfig: NextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@noble/hashes": resolveNobleHashes(),
+      // Exact-match alias only — subpath imports like '@noble/hashes/sha256'
+      // need to fall through to normal node resolution so the package's
+      // 'exports' field is honored.
+      "@noble/hashes$": resolveNobleHashes(),
       "@react-native-async-storage/async-storage": false,
     };
 
