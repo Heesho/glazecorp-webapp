@@ -28,7 +28,7 @@ const baseTransports = BASE_RPC_ENDPOINTS.map((url) =>
 );
 
 const WALLETCONNECT_PROJECT_ID =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "d04f41bca90773e76c0fc51b6aa734c5";
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "f8090830e0bee3f6db0c4652c1b7780d";
 
 // Resolve the app URL from the actual page when running in the browser so
 // the WalletConnect metadata matches whichever domain the user loaded
