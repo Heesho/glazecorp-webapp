@@ -36,16 +36,22 @@ export function useFarcaster() {
   const browserConnectors = useMemo(() => getBrowserWalletConnectors(connectors), [connectors]);
   const primaryConnector = isInFrame ? farcasterConnector : browserConnectors[0];
 
-  // Fetch Farcaster context and detect frame environment
+  // Fetch Farcaster context and detect frame environment. Times out at 1.5s
+  // because some hosts (Base App) no longer respond to Farcaster mini-app SDK
+  // methods, and sdk.context would otherwise hang forever leaving isInFrame
+  // stuck at null — which blocks every downstream connect/UI decision.
   useEffect(() => {
     let cancelled = false;
     const hydrateContext = async () => {
       try {
-        const ctx = (await (sdk as unknown as {
+        const ctxPromise = (sdk as unknown as {
           context: Promise<FarcasterContext> | FarcasterContext;
-        }).context) as FarcasterContext;
+        }).context as Promise<FarcasterContext>;
+        const ctx = (await Promise.race([
+          ctxPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+        ])) as FarcasterContext | null;
         if (!cancelled) {
-          // Only consider us "in frame" if context has a real user with a fid
           const hasUser = !!(ctx?.user?.fid);
           setContext(hasUser ? ctx : null);
           setIsInFrame(hasUser);

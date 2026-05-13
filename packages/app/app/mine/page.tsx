@@ -213,7 +213,7 @@ export default function MinePage() {
   const handleConnect = async () => {
     let lastError: unknown;
 
-    for (const connector of getPreferredWalletConnectors(connectors, { preferFarcaster: true })) {
+    for (const connector of getPreferredWalletConnectors(connectors)) {
       try {
         await connectAsync({ connector });
         return;
