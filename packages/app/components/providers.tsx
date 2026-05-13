@@ -63,10 +63,17 @@ function AutoConnect() {
     let cancelled = false;
 
     const detectMiniApp = async () => {
+      // sdk.context can hang indefinitely inside hosts that no longer respond
+      // to Farcaster mini-app SDK methods (notably Base App after April 2026).
+      // Race it against a 1.5s timeout so we don't sit on null isInFrame forever.
       try {
-        const ctx = (await (sdk as unknown as {
+        const ctxPromise = (sdk as unknown as {
           context: Promise<{ user?: { fid?: number } }>;
-        }).context) ?? null;
+        }).context;
+        const ctx = await Promise.race([
+          ctxPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+        ]);
 
         if (!cancelled) {
           setIsInFrame(!!ctx?.user?.fid);
