@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { sdk } from "@farcaster/miniapp-sdk";
 import { wagmiConfig } from "@/lib/wagmi";
 import { DEFAULT_CHAIN_ID } from "@/lib/constants";
-import { FARCASTER_AUTO_CONNECT_KEY, getFarcasterConnector } from "@/lib/farcaster-wallet";
+import { getFarcasterConnector } from "@/lib/farcaster-wallet";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -47,8 +47,9 @@ function NetworkGuard({ children }: { children: ReactNode }) {
 
 function AutoConnect() {
   const readyRef = useRef(false);
+  const attemptedRef = useRef(false);
   const [isInFrame, setIsInFrame] = useState<boolean | null>(null);
-  const { isConnected } = useAccount();
+  const { isConnected, isReconnecting } = useAccount();
   const { connectors, connectAsync, isPending: isConnecting } = useConnect();
   const farcasterConnector = getFarcasterConnector(connectors);
 
@@ -93,23 +94,20 @@ function AutoConnect() {
   }, []);
 
   useEffect(() => {
-    if (isInFrame !== true || isConnected || isConnecting || !farcasterConnector) {
+    if (isInFrame !== true || isConnected || isReconnecting || isConnecting || !farcasterConnector) {
       return;
     }
 
-    const alreadyAttempted =
-      typeof window !== "undefined" && sessionStorage.getItem(FARCASTER_AUTO_CONNECT_KEY);
-    if (alreadyAttempted) return;
-
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(FARCASTER_AUTO_CONNECT_KEY, "true");
-    }
+    // Retry once on each app load. Old sessionStorage flags must not
+    // permanently suppress reconnect after a failed attempt.
+    if (attemptedRef.current) return;
+    attemptedRef.current = true;
 
     connectAsync({
       connector: farcasterConnector,
       chainId: DEFAULT_CHAIN_ID,
     }).catch(() => {});
-  }, [connectAsync, farcasterConnector, isConnected, isConnecting, isInFrame]);
+  }, [connectAsync, farcasterConnector, isConnected, isReconnecting, isConnecting, isInFrame]);
 
   return null;
 }

@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useAccount, useConnect, useWalletClient } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
 import { formatEther } from "viem";
 import { Loader2 } from "lucide-react";
 import { useMinerData, usePriceTicker, useGlaze } from "@/features/terminal";
 import { MINER_QUOTE_POLLING_INTERVAL_MS } from "@/config/miner-constants";
 import { formatEth, formatDonut } from "@/lib/miner/format";
 import { truncateAddress, timeAgo } from "@/lib/format";
-import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
+import { useFarcaster } from "@/hooks/useFarcaster";
 import type { FarcasterProfile, FeedItem } from "@/types/miner";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -122,7 +122,7 @@ export default function MinePage() {
   }, []);
 
   const { address, isConnected } = useAccount();
-  const { connectors, connectAsync } = useConnect();
+  const { connect, isConnecting, connectionError: walletConnectionError } = useFarcaster();
   const { data: walletClient } = useWalletClient();
 
   const {
@@ -211,27 +211,19 @@ export default function MinePage() {
   const totalUsdStr = `${totalIsPositive ? "+" : "-"}$${Math.abs(totalUsdNum).toFixed(2)}`;
 
   const handleConnect = async () => {
-    let lastError: unknown;
-
-    for (const connector of getPreferredWalletConnectors(connectors)) {
-      try {
-        await connectAsync({ connector });
-        return;
-      } catch (e) {
-        lastError = e;
-        if (!shouldTryNextConnector(connector, e)) break;
-      }
-    }
-
-    if (lastError) {
-      console.error("Connect failed:", lastError);
-    }
+    if (isConnecting) return;
+    await connect().catch(() => {});
   };
 
   // ─── render ─────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen bg-background">
+      {walletConnectionError && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[220] rounded-lg bg-red-50 p-4 text-sm text-red-800 shadow-lg">
+          {walletConnectionError}
+        </div>
+      )}
       <div
         className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16"
         style={{

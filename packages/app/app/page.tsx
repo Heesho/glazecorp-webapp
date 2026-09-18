@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 const blurbs = [
@@ -20,11 +21,6 @@ export default function LandingPage() {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
-
-  // Open the nav menu overlay — smooth transition to white menu
-  const handleEnter = () => {
-    window.dispatchEvent(new CustomEvent("open-nav-menu"));
-  };
 
   return (
     <main className="relative h-screen w-full overflow-hidden">
@@ -68,12 +64,12 @@ export default function LandingPage() {
 
           {/* CTA buttons */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <button
-              onClick={handleEnter}
+            <Link
+              href="/mine"
               className="btn-liquid-glass inline-flex items-center justify-center w-[100px] sm:w-[140px] h-[40px] sm:h-[48px] text-[11px] sm:text-[12px] font-semibold tracking-[0.02em] text-white"
             >
               Enter App
-            </button>
+            </Link>
             <a
               href="https://givefun.vercel.app/"
               target="_blank"

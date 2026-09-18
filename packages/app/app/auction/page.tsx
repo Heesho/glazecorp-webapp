@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAccount, useConnect, useReadContract, useReadContracts } from "wagmi";
+import { useAccount, useReadContract, useReadContracts } from "wagmi";
 import { formatUnits, formatEther, zeroAddress } from "viem";
 import { base } from "wagmi/chains";
 import { Loader2 } from "lucide-react";
@@ -12,7 +12,7 @@ import {
   TOKEN_ADDRESSES,
   POLLING_INTERVAL_MS,
 } from "@/config/govern-constants";
-import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
+import { useFarcaster } from "@/hooks/useFarcaster";
 import { MINER_MULTICALL_ADDRESS, MINER_MULTICALL_ABI } from "@/config/miner-constants";
 import { ERC20_ABI } from "@/lib/contracts";
 
@@ -330,7 +330,7 @@ export default function AuctionPage() {
   }, []);
 
   const { address, isConnected } = useAccount();
-  const { connectors, connectAsync } = useConnect();
+  const { connect, isConnecting, connectionError: walletConnectionError } = useFarcaster();
 
   const [ethPrice, setEthPrice] = useState(0);
   const [btcPrice, setBtcPrice] = useState(0);
@@ -403,25 +403,17 @@ export default function AuctionPage() {
   } = useAuctions(address);
 
   const handleConnect = async () => {
-    let lastError: unknown;
-
-    for (const connector of getPreferredWalletConnectors(connectors)) {
-      try {
-        await connectAsync({ connector });
-        return;
-      } catch (e) {
-        lastError = e;
-        if (!shouldTryNextConnector(connector, e)) break;
-      }
-    }
-
-    if (lastError) {
-      console.error("Connect failed:", lastError);
-    }
+    if (isConnecting) return;
+    await connect().catch(() => {});
   };
 
   return (
     <main className="min-h-screen bg-background">
+      {walletConnectionError && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[220] rounded-lg bg-red-50 p-4 text-sm text-red-800 shadow-lg">
+          {walletConnectionError}
+        </div>
+      )}
       <div
         className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16"
         style={{

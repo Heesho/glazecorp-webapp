@@ -1,5 +1,5 @@
 # Dependencies
-node_modules/
+node_modules
 
 # Environment variables
 .env
@@ -43,3 +43,5 @@ nul
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.vercel
+.env*

@@ -9,7 +9,8 @@ import { Providers } from "@/components/providers";
 import { GlobalNav } from "@/components/global-nav";
 import { PageTransition } from "@/components/page-transition";
 
-const appDomain = process.env.NEXT_PUBLIC_APP_URL || "https://glazecorp.io";
+// Keep legacy shares on the domain covered by accountAssociation.
+const appDomain = "https://glazecorp.vercel.app";
 const heroImageUrl = `${appDomain}/media/hero.png`;
 const splashImageUrl = `${appDomain}/media/splash.png`;
 
@@ -23,11 +24,11 @@ const miniAppEmbed = {
   version: "1",
   imageUrl: heroImageUrl,
   button: {
-    title: "Start funding",
+    title: "Mine DONUT",
     action: {
       type: "launch_miniapp" as const,
       name: "GlazeCorp",
-      url: appDomain,
+      url: `${appDomain}/mine`,
       splashImageUrl,
       splashBackgroundColor: "#000000",
     },
@@ -49,6 +50,13 @@ export const metadata: Metadata = {
   },
   other: {
     "fc:miniapp": JSON.stringify(miniAppEmbed),
+    "fc:frame": JSON.stringify({
+      ...miniAppEmbed,
+      button: {
+        ...miniAppEmbed.button,
+        action: { ...miniAppEmbed.button.action, type: "launch_frame" },
+      },
+    }),
     "base:app_id": "694db1f1c63ad876c9081363",
   },
 };
