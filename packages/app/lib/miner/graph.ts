@@ -5,6 +5,7 @@ const GRAPH_URL =
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export interface GraphResponse {
+  _meta?: { block: { number: number }; hasIndexingErrors: boolean };
   miners?: Array<{ revenue: string; minted: string }>;
   glazes?: Array<{
     id: string;
@@ -36,6 +37,7 @@ export async function fetchGraphData(
 
   const query = `
     {
+      _meta { block { number } hasIndexingErrors }
       miners(first: 1) {
         revenue
         minted
@@ -61,8 +63,10 @@ export async function fetchGraphData(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query }),
     });
+    if (!res.ok) return null;
     const json = await res.json();
-    return json.data;
+    if (json.errors?.length || json.data?._meta?.hasIndexingErrors) return null;
+    return json.data ?? null;
   } catch (error) {
     console.error("Graph Error:", error);
     return null;

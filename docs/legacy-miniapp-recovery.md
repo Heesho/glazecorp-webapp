@@ -9,6 +9,7 @@ Legacy app: https://glazecorp.vercel.app/mine
 - Saved Farcaster connectors are gated by SDK host detection before Wagmi reconnect can call the unsupported provider in Base/browser contexts. Connector ID stays `farcaster` to preserve existing sessions.
 - The old sessionStorage auto-connect flag no longer suppresses recovery after reopening the app.
 - Miniapp and legacy frame embeds use the signed `glazecorp.vercel.app` domain and open `/mine`. The landing CTA opens Mine directly.
+- Mining shows an automatic sync/unavailable notice when indexed history trails Base or cannot be loaded, rather than silently presenting incomplete totals as current.
 - Wallet connection errors are visible and rejection does not silently select another wallet.
 
 ## Indexer restoration

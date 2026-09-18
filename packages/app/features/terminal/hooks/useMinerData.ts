@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { MinerState, FarcasterProfile, FeedItem, GraphStat } from "@/types/miner";
-import { fetchMinerState, fetchMinerStartTime } from "@/lib/miner/multicall";
+import { fetchMinerState, fetchMinerStartTime, fetchMinerBlockNumber } from "@/lib/miner/multicall";
 import { fetchGraphData } from "@/lib/miner/graph";
 import { fetchFarcasterProfile, fetchFarcasterProfiles } from "@/lib/miner/farcaster";
 import { fetchEthPrice } from "@/lib/miner/price";
@@ -28,6 +28,7 @@ const INITIAL_STATE: MinerState = {
 };
 
 interface UseMinerDataReturn {
+  historyStatus: "loading" | "syncing" | "ready" | "unavailable";
   minerState: MinerState;
   setMinerState: React.Dispatch<React.SetStateAction<MinerState>>;
   kingProfile: FarcasterProfile | null;
@@ -48,6 +49,7 @@ export function useMinerData(
   options: UseMinerDataOptions = {}
 ): UseMinerDataReturn {
   const { statePollingIntervalMs = POLLING_INTERVAL_MS } = options;
+  const [historyStatus, setHistoryStatus] = useState<UseMinerDataReturn["historyStatus"]>("loading");
   const [minerState, setMinerState] = useState<MinerState>(INITIAL_STATE);
   const [kingProfile, setKingProfile] = useState<FarcasterProfile | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -92,7 +94,18 @@ export function useMinerData(
 
     const refreshAncillaryData = async () => {
       const addr = userAddress ?? ZERO_ADDRESS;
-      const graphData = await fetchGraphData(addr);
+      const [graphData, latestBlock] = await Promise.all([
+        fetchGraphData(addr),
+        fetchMinerBlockNumber(),
+      ]);
+      if (!cancelled) {
+        const indexedBlock = graphData?._meta?.block.number;
+        setHistoryStatus(!graphData ? "unavailable" :
+          indexedBlock != null && latestBlock != null
+            ? (latestBlock - indexedBlock > 300 ? "syncing" : "ready")
+            : "unavailable");
+        if (!graphData?.account) setUserGraphStats(null);
+      }
       if (!cancelled && graphData) {
         if (graphData.miners?.[0]) {
           setStats(graphData.miners[0]);
@@ -174,6 +187,7 @@ export function useMinerData(
   }, [feed]);
 
   return {
+    historyStatus,
     minerState,
     setMinerState,
     kingProfile,

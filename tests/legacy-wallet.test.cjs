@@ -5,12 +5,12 @@ const vm = require('node:vm');
 const ts = require('typescript');
 
 // Run the real TypeScript modules with controlled host/provider dependencies.
-function load(file, dependencies = {}) {
+function load(file, dependencies = {}, globals = {}) {
   const exports = {};
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText;
-  vm.runInNewContext(code, { exports, Error, require: (id) => dependencies[id] ?? require(id) });
+  vm.runInNewContext(code, { exports, Error, process, ...globals, require: (id) => dependencies[id] ?? require(id) });
   return exports;
 }
 const wallets = load('packages/app/lib/farcaster-wallet.ts');
@@ -72,4 +72,25 @@ test('missing injected wallets fall through to Base Account', () => {
 
 test('a missing Farcaster connector does not select an unrelated wallet', () => {
   assert.equal(wallets.getPreferredWalletConnectors([base, injected], { preferFarcaster: true }).length, 0);
+});
+
+for (const [label, response] of [
+  ['deleted indexer', { ok: false }],
+  ['GraphQL failure', { ok: true, json: async () => ({ errors: [{ message: 'index unavailable' }] }) }],
+  ['indexing error', { ok: true, json: async () => ({ data: { _meta: { hasIndexingErrors: true } } }) }],
+]) {
+  test(label + ' is unavailable rather than empty successful history', async () => {
+    const graph = load('packages/app/lib/miner/graph.ts', {}, { fetch: async () => response });
+    assert.equal(await graph.fetchGraphData(), null);
+  });
+}
+test('healthy history includes the indexed block for sync detection', async () => {
+  const data = { _meta: { block: { number: 123 }, hasIndexingErrors: false }, miners: [], glazes: [] };
+  const graph = load('packages/app/lib/miner/graph.ts', {}, {
+    fetch: async (_url, options) => {
+      assert.match(JSON.parse(options.body).query, /_meta/);
+      return { ok: true, json: async () => ({ data }) };
+    },
+  });
+  assert.equal(await graph.fetchGraphData(), data);
 });

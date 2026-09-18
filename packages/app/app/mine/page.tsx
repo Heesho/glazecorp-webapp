@@ -126,6 +126,7 @@ export default function MinePage() {
   const { data: walletClient } = useWalletClient();
 
   const {
+    historyStatus,
     minerState,
     setMinerState,
     kingProfile,
@@ -232,6 +233,15 @@ export default function MinePage() {
         }}
       >
         <div className="lg:pt-[88px]">
+          {historyStatus !== "ready" && (
+            <p role="status" className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {historyStatus === "syncing"
+                ? "Mining history is syncing. Historical totals may be incomplete; wallet balances are live."
+                : historyStatus === "unavailable"
+                  ? "Mining history is temporarily unavailable. Wallet balances are read directly from Base."
+                  : "Loading mining history…"}
+            </p>
+          )}
           {/* ── page header (desktop only) ────────────────────────── */}
           <div className="hidden lg:block mb-6">
             <h1 className="font-display text-[2.75rem] font-semibold leading-[0.9] tracking-[-0.04em]">Mine</h1>
@@ -394,7 +404,7 @@ export default function MinePage() {
               ) : (
                 feed.slice(0, 10).map((item, idx) => {
                   const profile = feedProfiles[item.miner.toLowerCase()];
-                  const isLive = idx === 0;
+                  const isLive = idx === 0 && item.timestamp === minerState.startTime && item.miner.toLowerCase() === minerState.miner.toLowerCase();
                   return (
                     <div key={item.id} className={`flex items-center gap-3 py-2.5 ${isLive ? "bg-[hsl(var(--primary)/0.05)] rounded-[var(--radius)] px-2 -mx-2" : ""}`}>
                       <ProfileAvatar profile={profile || null} size={28} />
@@ -656,7 +666,7 @@ export default function MinePage() {
                     ) : (
                       feed.slice(0, 10).map((item, idx) => {
                         const profile = feedProfiles[item.miner.toLowerCase()];
-                        const isLive = idx === 0;
+                        const isLive = idx === 0 && item.timestamp === minerState.startTime && item.miner.toLowerCase() === minerState.miner.toLowerCase();
                         let displayPrice = "0.000";
                         try { displayPrice = parseFloat(item.price).toFixed(3); } catch {}
 
