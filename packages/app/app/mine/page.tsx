@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { useAccount, useConnect, useWalletClient } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
 import { formatEther } from "viem";
 import { Loader2 } from "lucide-react";
 import { useMinerData, usePriceTicker, useGlaze } from "@/features/terminal";
 import { MINER_QUOTE_POLLING_INTERVAL_MS } from "@/config/miner-constants";
 import { formatEth, formatDonut } from "@/lib/miner/format";
 import { truncateAddress, timeAgo } from "@/lib/format";
-import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
+import { useFarcaster } from "@/hooks/useFarcaster";
 import type { FarcasterProfile, FeedItem } from "@/types/miner";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -122,10 +122,11 @@ export default function MinePage() {
   }, []);
 
   const { address, isConnected } = useAccount();
-  const { connectors, connectAsync } = useConnect();
+  const { connect, isConnecting, connectionError: walletConnectionError } = useFarcaster();
   const { data: walletClient } = useWalletClient();
 
   const {
+    historyStatus,
     minerState,
     setMinerState,
     kingProfile,
@@ -211,27 +212,19 @@ export default function MinePage() {
   const totalUsdStr = `${totalIsPositive ? "+" : "-"}$${Math.abs(totalUsdNum).toFixed(2)}`;
 
   const handleConnect = async () => {
-    let lastError: unknown;
-
-    for (const connector of getPreferredWalletConnectors(connectors)) {
-      try {
-        await connectAsync({ connector });
-        return;
-      } catch (e) {
-        lastError = e;
-        if (!shouldTryNextConnector(connector, e)) break;
-      }
-    }
-
-    if (lastError) {
-      console.error("Connect failed:", lastError);
-    }
+    if (isConnecting) return;
+    await connect().catch(() => {});
   };
 
   // ─── render ─────────────────────────────────────────────────────────────
 
   return (
     <main className="min-h-screen bg-background">
+      {walletConnectionError && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[220] rounded-lg bg-red-50 p-4 text-sm text-red-800 shadow-lg">
+          {walletConnectionError}
+        </div>
+      )}
       <div
         className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16"
         style={{
@@ -240,6 +233,15 @@ export default function MinePage() {
         }}
       >
         <div className="lg:pt-[88px]">
+          {historyStatus !== "ready" && (
+            <p role="status" className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              {historyStatus === "syncing"
+                ? "Mining history is syncing. Historical totals may be incomplete; wallet balances are live."
+                : historyStatus === "unavailable"
+                  ? "Mining history is temporarily unavailable. Wallet balances are read directly from Base."
+                  : "Loading mining history…"}
+            </p>
+          )}
           {/* ── page header (desktop only) ────────────────────────── */}
           <div className="hidden lg:block mb-6">
             <h1 className="font-display text-[2.75rem] font-semibold leading-[0.9] tracking-[-0.04em]">Mine</h1>
@@ -402,7 +404,7 @@ export default function MinePage() {
               ) : (
                 feed.slice(0, 10).map((item, idx) => {
                   const profile = feedProfiles[item.miner.toLowerCase()];
-                  const isLive = idx === 0;
+                  const isLive = idx === 0 && item.timestamp === minerState.startTime && item.miner.toLowerCase() === minerState.miner.toLowerCase();
                   return (
                     <div key={item.id} className={`flex items-center gap-3 py-2.5 ${isLive ? "bg-[hsl(var(--primary)/0.05)] rounded-[var(--radius)] px-2 -mx-2" : ""}`}>
                       <ProfileAvatar profile={profile || null} size={28} />
@@ -664,7 +666,7 @@ export default function MinePage() {
                     ) : (
                       feed.slice(0, 10).map((item, idx) => {
                         const profile = feedProfiles[item.miner.toLowerCase()];
-                        const isLive = idx === 0;
+                        const isLive = idx === 0 && item.timestamp === minerState.startTime && item.miner.toLowerCase() === minerState.miner.toLowerCase();
                         let displayPrice = "0.000";
                         try { displayPrice = parseFloat(item.price).toFixed(3); } catch {}
 

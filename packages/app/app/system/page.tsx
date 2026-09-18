@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount } from "wagmi";
 import { formatUnits } from "viem";
 import { Loader2 } from "lucide-react";
 
 import { useSystemData, useFlushAndDistribute } from "@/features/system";
 import { PAYMENT_TOKEN_SYMBOLS, TOKEN_ADDRESSES } from "@/config/govern-constants";
-import { getPreferredWalletConnectors, shouldTryNextConnector } from "@/lib/farcaster-wallet";
+import { useFarcaster } from "@/hooks/useFarcaster";
 
 // ─── constants ──────────────────────────────────────────────────────────────
 
@@ -154,7 +154,7 @@ export default function SystemPage() {
   }, []);
 
   const { address, isConnected } = useAccount();
-  const { connectors, connectAsync } = useConnect();
+  const { connect, isConnecting, connectionError: walletConnectionError } = useFarcaster();
 
   const [ethPrice, setEthPrice] = useState(0);
 
@@ -181,21 +181,8 @@ export default function SystemPage() {
     useFlushAndDistribute(address, refetchAll);
 
   const handleConnect = async () => {
-    let lastError: unknown;
-
-    for (const connector of getPreferredWalletConnectors(connectors)) {
-      try {
-        await connectAsync({ connector });
-        return;
-      } catch (e) {
-        lastError = e;
-        if (!shouldTryNextConnector(connector, e)) break;
-      }
-    }
-
-    if (lastError) {
-      console.error("Connect failed:", lastError);
-    }
+    if (isConnecting) return;
+    await connect().catch(() => {});
   };
 
   // Epoch progress
@@ -230,6 +217,11 @@ export default function SystemPage() {
 
   return (
     <main className="min-h-screen bg-background">
+      {walletConnectionError && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[220] rounded-lg bg-red-50 p-4 text-sm text-red-800 shadow-lg">
+          {walletConnectionError}
+        </div>
+      )}
       <div
         className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-10 lg:px-16"
         style={{

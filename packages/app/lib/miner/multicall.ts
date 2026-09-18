@@ -84,3 +84,12 @@ export async function fetchMinerStartTime(): Promise<number | null> {
     return null;
   }
 }
+
+/** Latest chain height, used to distinguish rebuilding history from live data. */
+export async function fetchMinerBlockNumber(): Promise<number | null> {
+  try {
+    return Number(await client.getBlockNumber());
+  } catch {
+    return null;
+  }
+}

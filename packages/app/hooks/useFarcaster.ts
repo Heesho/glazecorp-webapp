@@ -7,6 +7,7 @@ import { base } from "wagmi/chains";
 import {
   getBrowserWalletConnectors,
   getFarcasterConnector,
+  getPreferredWalletConnectors,
   shouldTryNextConnector,
 } from "@/lib/farcaster-wallet";
 
@@ -28,6 +29,7 @@ export function useFarcaster() {
   const [context, setContext] = useState<FarcasterContext | null>(null);
   const [isInFrame, setIsInFrame] = useState<boolean | null>(null); // null = still detecting
 
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const { address, isConnected } = useAccount();
   const { connectors, connectAsync, isPending: isConnecting } = useConnect();
 
@@ -71,13 +73,18 @@ export function useFarcaster() {
 
   // Connect wallet manually
   const connect = useCallback(async (): Promise<`0x${string}` | undefined> => {
+    setConnectionError(null);
     if (address) {
       return address;
     }
 
-    const connectorAttempts = isInFrame ? (farcasterConnector ? [farcasterConnector] : []) : browserConnectors;
+    // Recheck at the time of the click: slow hosts may resolve after the
+    // initial UI detection timeout, especially on returning mobile sessions.
+    const inMiniApp = isInFrame === true || await sdk.isInMiniApp().catch(() => false);
+    const connectorAttempts = getPreferredWalletConnectors(connectors, { preferFarcaster: inMiniApp });
 
     if (connectorAttempts.length === 0) {
+      setConnectionError("No wallet is available. Open this app in Farcaster or Base, then try again.");
       throw new Error("Wallet connector not available");
     }
 
@@ -116,12 +123,13 @@ export function useFarcaster() {
       }
     }
 
+    setConnectionError("Wallet connection failed. Please try Connect Wallet again and approve the connection in your wallet.");
     if (lastError instanceof Error) {
       throw lastError;
     }
 
     throw new Error("Wallet connection failed");
-  }, [address, browserConnectors, connectAsync, farcasterConnector, isInFrame]);
+  }, [address, connectors, connectAsync, isInFrame]);
 
   return {
     context,
@@ -132,6 +140,7 @@ export function useFarcaster() {
     isInFrame,
     connect,
     primaryConnector,
+    connectionError,
   };
 }
 

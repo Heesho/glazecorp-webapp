@@ -1,4 +1,4 @@
-import { farcasterMiniApp } from "@farcaster/miniapp-wagmi-connector";
+import { legacyFarcasterConnector } from "@/lib/farcaster-connector";
 import { fallback, http, createStorage, cookieStorage } from "wagmi";
 import { base } from "wagmi/chains";
 import { createConfig } from "wagmi";
@@ -40,7 +40,7 @@ const baseTransports = BASE_RPC_ENDPOINTS.map((url) =>
 //    speaks the EIP-5792 `wallet_connect` protocol that Base App exposes.
 //    https://docs.base.org/apps/guides/migrate-to-standard-web-app
 const connectors = [
-  farcasterMiniApp(),
+  legacyFarcasterConnector(),
   injected({ target: "rabby" }),
   injected(),
   baseAccount({ appName: "GlazeCorp" }),

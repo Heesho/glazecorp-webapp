@@ -5,8 +5,6 @@ type ConnectorLike = {
   type?: string;
 };
 
-export const FARCASTER_AUTO_CONNECT_KEY = "farcaster_auto_connect_attempted";
-
 export function isFarcasterConnector(connector: ConnectorLike | null | undefined): boolean {
   if (!connector) return false;
   return connector.type === "farcasterMiniApp" || connector.id === "farcaster" || connector.id === "farcasterMiniApp";
@@ -79,8 +77,8 @@ export function getPreferredWalletConnectors<T extends ConnectorLike>(
   const farcasterConnector = getFarcasterConnector(connectors);
   const browserConnectors = getBrowserWalletConnectors(connectors);
 
-  if (options.preferFarcaster && farcasterConnector) {
-    return [farcasterConnector, ...browserConnectors];
+  if (options.preferFarcaster) {
+    return farcasterConnector ? [farcasterConnector] : [];
   }
 
   return browserConnectors;
@@ -100,6 +98,6 @@ export function isConnectorUnavailableError(error: unknown): boolean {
   );
 }
 
-export function shouldTryNextConnector(connector: ConnectorLike, error: unknown): boolean {
-  return isFarcasterConnector(connector) || isConnectorUnavailableError(error);
+export function shouldTryNextConnector(_connector: ConnectorLike, error: unknown): boolean {
+  return isConnectorUnavailableError(error);
 }
